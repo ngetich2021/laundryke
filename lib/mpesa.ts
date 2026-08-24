@@ -23,6 +23,22 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
+// Where Safaricom should POST the payment result. An explicit
+// MPESA_CALLBACK_URL always wins (needed for a custom domain); otherwise
+// this falls back to Vercel's own runtime env vars, so the app works out
+// of the box on any Vercel deployment without manual configuration.
+function resolveCallbackBase(): string {
+  const explicit = process.env.MPESA_CALLBACK_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercelUrl) return `https://${vercelUrl}`;
+
+  throw new Error(
+    "Set MPESA_CALLBACK_URL to this app's public URL so Safaricom can reach /api/mpesa/callback."
+  );
+}
+
 function daraTimestamp(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -63,7 +79,7 @@ export async function initiateStkPush({
     "base64"
   );
   const accessToken = await getAccessToken();
-  const callbackBase = process.env.MPESA_CALLBACK_URL!.replace(/\/$/, "");
+  const callbackBase = resolveCallbackBase();
 
   const res = await fetch(`${BASE_URL}/mpesa/stkpush/v1/processrequest`, {
     method: "POST",
