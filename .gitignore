@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/lib/generated/prisma
+
+# local sqlite (migrations are generated here, then synced to Turso)
+/dev.db
+/dev.db-journal

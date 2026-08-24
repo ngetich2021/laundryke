@@ -1,0 +1,176 @@
+// Prisma schema — Turso (libSQL) via driver adapter at runtime.
+// Local migrations run against DATABASE_URL (file:./dev.db); apply the
+// generated SQL to Turso with `turso db shell <db-name> < migration.sql`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum VideoSource {
+  YOUTUBE
+  UPLOAD
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum PermissionKey {
+  MANAGE_USERS
+  MANAGE_LISTINGS
+  MANAGE_PAYMENTS
+  MANAGE_PRICING
+  MANAGE_ROLES
+}
+
+model User {
+  id                  String    @id @default(nanoid(10))
+  name                String?
+  email               String    @unique
+  emailVerified       DateTime?
+  image               String?
+  phone               String?
+  locationDescription String?
+  role                Role      @default(USER)
+  customRoleId        String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+  listings   Listing[]
+  payments   Payment[]
+  customRole CustomRole? @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
+}
+
+model CustomRole {
+  id        String   @id @default(nanoid(10))
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  permissions RolePermission[]
+  users       User[]
+}
+
+model RolePermission {
+  id         String        @id @default(nanoid(10))
+  roleId     String
+  permission PermissionKey
+
+  role CustomRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permission])
+}
+
+model Account {
+  id                String  @id @default(nanoid(10))
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(nanoid(10))
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Listing {
+  id            String       @id @default(nanoid(10))
+  ownerId       String
+  businessName  String
+  description   String
+  phone         String?
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  videoSource   VideoSource?
+  videoUrl      String?
+  imageUrl      String?
+  tiktokUrl     String?
+  facebookUrl   String?
+  instagramUrl  String?
+  isActive      Boolean      @default(true)
+  promotedUntil DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  owner      User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  payments   Payment[]
+  priceItems PriceItem[]
+
+  @@index([ownerId])
+  @@index([isActive, createdAt])
+  @@index([isActive, promotedUntil])
+}
+
+model PriceItem {
+  id        String   @id @default(nanoid(10))
+  listingId String
+  label     String
+  priceKes  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}
+
+model Payment {
+  id                String        @id @default(nanoid(10))
+  listingId         String
+  userId            String
+  amount            Int
+  phone             String
+  days              Int
+  status            PaymentStatus @default(PENDING)
+  merchantRequestId String?
+  checkoutRequestId String?       @unique
+  mpesaReceipt      String?
+  resultDesc        String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([userId])
+}
