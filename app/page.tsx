@@ -1,12 +1,12 @@
 import { SiteHeader } from "@/components/site-header";
 import { HeroBanner } from "@/components/hero-banner";
 import { ListingGrid } from "@/components/listing-grid";
-import { getActiveListingsCount, getFeaturedListing } from "@/lib/listings-data";
+import { getActiveListingsCount, getFeaturedListings } from "@/lib/listings-data";
 
 export default async function HomePage() {
   const [count, featured] = await Promise.all([
     getActiveListingsCount(),
-    getFeaturedListing(),
+    getFeaturedListings(),
   ]);
 
   return (

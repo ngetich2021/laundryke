@@ -30,9 +30,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, sortableHeader, type ColumnDef } from "@/components/ui/data-table";
 import { advertiseSchema, type AdvertiseInput } from "@/lib/validations";
-import { advertiseAmount } from "@/lib/constants";
+import { advertiseAmount, videoAddonAmount, totalPromoteAmount } from "@/lib/constants";
 import { initiateAdvertisePayment, getPaymentStatus } from "@/app/actions/payments";
 import type { Listing, Payment } from "@/lib/generated/prisma/client";
 
@@ -62,16 +63,31 @@ export function AdvertisePanel({
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(advertiseSchema),
-    defaultValues: { listingId: activeListings[0]?.id ?? "", phone: "", days: 3 },
+    defaultValues: {
+      listingId: activeListings[0]?.id ?? "",
+      phone: "",
+      days: 3,
+      includeVideo: false,
+    },
   });
 
   const days = Number(watch("days")) || 0;
+  const selectedListingId = watch("listingId");
+  const includeVideo = watch("includeVideo") ?? false;
+  const selectedListing = activeListings.find((listing) => listing.id === selectedListingId);
+  const hasVideo = !!selectedListing?.videoUrl;
 
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasVideo && includeVideo) {
+      setValue("includeVideo", false);
+    }
+  }, [hasVideo, includeVideo, setValue]);
 
   function pollPayment(paymentId: string) {
     let attempts = 0;
@@ -233,8 +249,34 @@ export function AdvertisePanel({
                 <Field>
                   <FieldLabel htmlFor="days">Days to feature</FieldLabel>
                   <Input id="days" type="number" min={1} max={30} {...register("days")} />
-                  <FieldDescription>KES {advertiseAmount(days)} total</FieldDescription>
+                  <FieldDescription>Blue badge: KES {advertiseAmount(days)}</FieldDescription>
                   <FieldError errors={[errors.days]} />
+                </Field>
+
+                <Field>
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="includeVideo"
+                      checked={includeVideo}
+                      disabled={!hasVideo}
+                      onCheckedChange={(checked) =>
+                        setValue("includeVideo", checked === true, { shouldValidate: true })
+                      }
+                    />
+                    <div className="flex flex-col gap-1">
+                      <FieldLabel htmlFor="includeVideo" className="font-normal">
+                        Also feature my video (+KES {videoAddonAmount(days)})
+                      </FieldLabel>
+                      {!hasVideo && (
+                        <FieldDescription>
+                          This shop has no video yet. Add one from &quot;Your shops&quot; to
+                          feature it now — or promote the badge today and come back to add the
+                          video later.
+                        </FieldDescription>
+                      )}
+                    </div>
+                  </div>
+                  <FieldError errors={[errors.includeVideo]} />
                 </Field>
 
                 <Field>
@@ -252,7 +294,7 @@ export function AdvertisePanel({
                 <DialogFooter className="mt-2">
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                    Pay KES {advertiseAmount(days)}
+                    Pay KES {totalPromoteAmount(days, includeVideo)}
                   </Button>
                 </DialogFooter>
               </FieldGroup>

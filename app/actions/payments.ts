@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { advertiseSchema, normalizeKenyanPhone } from "@/lib/validations";
-import { advertiseAmount } from "@/lib/constants";
+import { totalPromoteAmount } from "@/lib/constants";
 import { initiateStkPush } from "@/lib/mpesa";
 
 export async function initiateAdvertisePayment(input: unknown) {
@@ -15,7 +15,7 @@ export async function initiateAdvertisePayment(input: unknown) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const { listingId, phone, days } = parsed.data;
+  const { listingId, phone, days, includeVideo } = parsed.data;
 
   const listing = await prisma.listing.findFirst({
     where: { id: listingId, ownerId: session.user.id },
@@ -24,7 +24,15 @@ export async function initiateAdvertisePayment(input: unknown) {
     return { error: { listingId: ["Listing not found"] } };
   }
 
-  const amount = advertiseAmount(days);
+  if (includeVideo && !listing.videoUrl) {
+    return {
+      error: {
+        includeVideo: ["Upload a video for this shop first, then come back to feature it."],
+      },
+    };
+  }
+
+  const amount = totalPromoteAmount(days, includeVideo);
   const normalizedPhone = normalizeKenyanPhone(phone);
 
   try {
@@ -42,6 +50,7 @@ export async function initiateAdvertisePayment(input: unknown) {
         amount,
         phone: normalizedPhone,
         days,
+        includesVideo: includeVideo,
         merchantRequestId: stk.MerchantRequestID,
         checkoutRequestId: stk.CheckoutRequestID,
       },

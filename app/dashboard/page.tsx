@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { SiteHeader } from "@/components/site-header";
-import { getActiveListingsCount, getFeaturedListing } from "@/lib/listings-data";
+import { getActiveListingsCount, getFeaturedListings } from "@/lib/listings-data";
 import { getMyListings } from "@/app/actions/listings";
 import { getMyPayments } from "@/app/actions/payments";
 import { getMyProfile } from "@/app/actions/account";
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
     roleOptions,
   ] = await Promise.all([
     getActiveListingsCount(),
-    getFeaturedListing(),
+    getFeaturedListings(),
     getMyListings(),
     getMyPayments(),
     getMyProfile(),

@@ -43,9 +43,27 @@ export async function getActiveListingsCount() {
   return prisma.listing.count({ where: { isActive: true } });
 }
 
-export async function getFeaturedListing() {
-  return prisma.listing.findFirst({
-    where: { isActive: true, promotedUntil: { gt: new Date() } },
-    orderBy: { promotedUntil: "desc" },
+export async function getFeaturedListings() {
+  const listings = await prisma.listing.findMany({
+    where: {
+      isActive: true,
+      videoUrl: { not: null },
+      videoSource: { not: null },
+      videoPromotedUntil: { gt: new Date() },
+    },
+    include: {
+      priceItems: { orderBy: { createdAt: "desc" } },
+    },
+    orderBy: { videoPromotedUntil: "desc" },
   });
+
+  const now = Date.now();
+
+  return listings.map((listing) => ({
+    ...listing,
+    isPromoted: !!listing.promotedUntil && listing.promotedUntil.getTime() > now,
+    distanceKm: null,
+  }));
 }
+
+export type FeaturedListing = Awaited<ReturnType<typeof getFeaturedListings>>[number];

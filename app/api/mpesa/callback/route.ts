@@ -41,6 +41,11 @@ export async function POST(req: Request) {
           promotedUntil: new Date(
             Date.now() + payment.days * 24 * 60 * 60 * 1000
           ),
+          ...(payment.includesVideo && {
+            videoPromotedUntil: new Date(
+              Date.now() + payment.days * 24 * 60 * 60 * 1000
+            ),
+          }),
         },
       }),
       prisma.user.findUniqueOrThrow({ where: { id: payment.userId } }),

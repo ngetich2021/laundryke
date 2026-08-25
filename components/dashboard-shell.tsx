@@ -21,6 +21,7 @@ import { AdminPanel } from "@/components/admin-panel";
 import { PricingPanel } from "@/components/pricing-panel";
 import { isAdminLike, type PermissionKey } from "@/lib/permissions";
 import type { Listing, Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/client";
+import type { FeaturedListing } from "@/lib/listings-data";
 
 type PaymentWithListing = Payment & { listing: { businessName: string } };
 
@@ -91,11 +92,7 @@ export function DashboardShell({
   };
   myProfile: { name: string | null; phone: string | null; locationDescription: string | null };
   initialCount: number;
-  featured: {
-    businessName: string;
-    videoSource: "YOUTUBE" | "UPLOAD" | null;
-    videoUrl: string | null;
-  } | null;
+  featured: FeaturedListing[];
   myListings: Listing[];
   myPayments: PaymentWithListing[];
   permissions: PermissionKey[];

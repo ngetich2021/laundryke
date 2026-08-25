@@ -61,6 +61,7 @@ export const advertiseSchema = z.object({
   listingId: z.string().min(1),
   phone: phoneSchema,
   days: z.coerce.number().int().min(1, "At least 1 day").max(30, "Max 30 days"),
+  includeVideo: z.boolean().optional().default(false),
 });
 
 export type AdvertiseInput = z.infer<typeof advertiseSchema>;

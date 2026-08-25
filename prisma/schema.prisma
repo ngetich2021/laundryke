@@ -112,24 +112,25 @@ model VerificationToken {
 }
 
 model Listing {
-  id            String       @id @default(nanoid(10))
-  ownerId       String
-  businessName  String
-  description   String
-  phone         String?
-  address       String?
-  latitude      Float?
-  longitude     Float?
-  videoSource   VideoSource?
-  videoUrl      String?
-  imageUrl      String?
-  tiktokUrl     String?
-  facebookUrl   String?
-  instagramUrl  String?
-  isActive      Boolean      @default(true)
-  promotedUntil DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                 String       @id @default(nanoid(10))
+  ownerId            String
+  businessName       String
+  description        String
+  phone              String?
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  videoSource        VideoSource?
+  videoUrl           String?
+  imageUrl           String?
+  tiktokUrl          String?
+  facebookUrl        String?
+  instagramUrl       String?
+  isActive           Boolean      @default(true)
+  promotedUntil      DateTime?
+  videoPromotedUntil DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   owner      User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   payments   Payment[]
@@ -138,6 +139,7 @@ model Listing {
   @@index([ownerId])
   @@index([isActive, createdAt])
   @@index([isActive, promotedUntil])
+  @@index([isActive, videoPromotedUntil])
 }
 
 model PriceItem {
@@ -160,6 +162,7 @@ model Payment {
   amount            Int
   phone             String
   days              Int
+  includesVideo     Boolean       @default(false)
   status            PaymentStatus @default(PENDING)
   merchantRequestId String?
   checkoutRequestId String?       @unique
