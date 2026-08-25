@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MapPin, LocateFixed, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,25 +25,33 @@ export function LocationPicker({
 }: {
   onLocate: (coords: Coordinates) => void;
 }) {
-  const [isLocating, startLocating] = useTransition();
+  const [isLocating, setIsLocating] = useState(false);
+  const locatingRef = useRef(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
   function handleAutoPick() {
+    if (locatingRef.current) return;
     setGeoError(null);
     if (!("geolocation" in navigator)) {
       setGeoError("Your browser doesn't support location detection");
       return;
     }
-    startLocating(() => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          onLocate({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-        },
-        () => setGeoError("Couldn't get your location. Try picking it on the map instead."),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    });
+    locatingRef.current = true;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onLocate({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        locatingRef.current = false;
+        setIsLocating(false);
+      },
+      () => {
+        setGeoError("Couldn't get your location. Try picking it on the map instead.");
+        locatingRef.current = false;
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   function handleConfirm(coords: Coordinates) {
@@ -53,13 +61,25 @@ export function LocationPicker({
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      <Button type="button" variant="secondary" onClick={handleAutoPick} disabled={isLocating}>
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={handleAutoPick}
+        disabled={isLocating}
+        aria-busy={isLocating}
+        className="min-w-32"
+      >
         {isLocating ? (
-          <Loader2 className="size-4 animate-spin" />
+          <>
+            <Loader2 className="size-4 animate-spin" />
+            Locating…
+          </>
         ) : (
-          <LocateFixed className="size-4" />
+          <>
+            <LocateFixed className="size-4" />
+            Auto pick
+          </>
         )}
-        Auto pick
       </Button>
       <span className="text-sm text-muted-foreground">or</span>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -27,15 +27,12 @@ export function ListingGrid({ initialCount }: { initialCount: number }) {
 
   const visibleListings = useMemo(() => {
     if (!listings) return [];
-    return listings.filter((l) => {
-      const distance = l.distanceKm ?? Infinity;
-      // No radius chosen yet: badge listings show from anywhere, regular
-      // ones only within easy walk-in range. Once the customer types an
-      // explicit radius, that's what they asked to search — honor it for
-      // everyone.
-      if (radiusKm === 0) return l.isPromoted || distance <= 0.5;
-      return distance <= radiusKm;
-    });
+    // No radius typed yet: default to an easy walk-in range. Once the
+    // customer types an explicit radius, that's the actual search — apply
+    // it to everyone. Badge listings still get shown first (see the sort
+    // in getActiveListings) but never at a nonsensical distance.
+    const cutoff = radiusKm === 0 ? 0.5 : radiusKm;
+    return listings.filter((l) => (l.distanceKm ?? Infinity) <= cutoff);
   }, [listings, radiusKm]);
 
   const radiusLabel = radiusKm === 0 ? null : `${radiusKm} km`;
@@ -49,7 +46,7 @@ export function ListingGrid({ initialCount }: { initialCount: number }) {
         }`;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6">
       <LocationPicker onLocate={handleLocate} />
 
       <div className="mt-6 flex flex-col items-center gap-4">
@@ -95,7 +92,7 @@ export function ListingGrid({ initialCount }: { initialCount: number }) {
           {visibleListings.length === 0 ? (
             <p className="py-10 text-center text-muted-foreground">{resultMessage}</p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
               {visibleListings.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}

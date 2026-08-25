@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -58,27 +58,39 @@ export function MapPicker({
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const locatingRef = useRef(false);
+  const confirmingRef = useRef(false);
 
   function handleUseMyLocation() {
+    if (locatingRef.current) return;
     setGeoError(null);
     if (!("geolocation" in navigator)) {
       setGeoError("Your browser doesn't support location detection");
       return;
     }
+    locatingRef.current = true;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         setMarker(coords);
         setFlyTarget([coords.latitude, coords.longitude]);
+        locatingRef.current = false;
         setLocating(false);
       },
       () => {
         setGeoError("Couldn't get your location. Tap the map to drop a pin instead.");
+        locatingRef.current = false;
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  }
+
+  function handleConfirmClick() {
+    if (confirmingRef.current || !marker) return;
+    confirmingRef.current = true;
+    onConfirm(marker);
   }
 
   const center: [number, number] = marker ? [marker.latitude, marker.longitude] : DEFAULT_CENTER;
@@ -111,23 +123,36 @@ export function MapPicker({
           variant="secondary"
           onClick={handleUseMyLocation}
           disabled={locating}
+          aria-busy={locating}
+          className="min-w-36"
         >
           {locating ? (
-            <Loader2 className="size-4 animate-spin" />
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Locating…
+            </>
           ) : (
-            <LocateFixed className="size-4" />
+            <>
+              <LocateFixed className="size-4" />
+              Use my location
+            </>
           )}
-          Use my location
         </Button>
       </div>
 
-      <div className="h-56 w-full overflow-hidden rounded-lg border">
+      <div className="relative h-56 w-full overflow-hidden rounded-lg border">
         <MapContainer center={center} zoom={marker ? 15 : 12} scrollWheelZoom className="h-full w-full">
           <TileLayer url={tiles.url} attribution={tiles.attribution} />
           <ClickHandler onPick={(lat, lng) => setMarker({ latitude: lat, longitude: lng })} />
           <FlyTo position={flyTarget} />
           {marker && <Marker position={[marker.latitude, marker.longitude]} />}
         </MapContainer>
+        {locating && (
+          <div className="absolute inset-0 z-1000 flex items-center justify-center gap-2 bg-background/70 text-sm font-medium backdrop-blur-sm">
+            <Loader2 className="size-5 animate-spin" />
+            Finding your location…
+          </div>
+        )}
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
@@ -135,7 +160,7 @@ export function MapPicker({
       </p>
       {geoError && <p className="text-center text-sm text-destructive">{geoError}</p>}
 
-      <Button type="button" disabled={!marker} onClick={() => marker && onConfirm(marker)}>
+      <Button type="button" disabled={!marker} onClick={handleConfirmClick}>
         Confirm location
       </Button>
     </div>

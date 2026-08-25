@@ -119,34 +119,34 @@ export function DashboardShell({
 
       <TabsList
         variant="line"
-        className="sticky top-0 z-20 h-14 w-full justify-around gap-0 rounded-none border-y bg-background/95 p-0 backdrop-blur"
+        className="sticky top-0 z-20 h-14 w-full justify-around gap-0 overflow-x-auto rounded-none border-y bg-background/95 p-0 backdrop-blur"
       >
-        <TabsTrigger value="browse" className="h-full flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="browse" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <Search className="size-4" />
           Browse
         </TabsTrigger>
-        <TabsTrigger value="post" className="h-full flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="post" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <PlusSquare className="size-4" />
           post
         </TabsTrigger>
-        <TabsTrigger value="advertise" className="h-full flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="advertise" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <Megaphone className="size-4" />
           advertise
         </TabsTrigger>
-        <TabsTrigger value="pricing" className="h-full flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="pricing" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <Tag className="size-4" />
           pricing
         </TabsTrigger>
-        <TabsTrigger value="settings" className="h-full flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="settings" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <Settings className="size-4" />
           settings
         </TabsTrigger>
-        <TabsTrigger value="account" className="h-full flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="account" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <UserRound className="size-4" />
           Account
         </TabsTrigger>
         {showAdminTab && (
-          <TabsTrigger value="admin" className="h-full flex-col gap-1 rounded-none text-xs">
+          <TabsTrigger value="admin" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
             <ShieldCheck className="size-4" />
             admin
           </TabsTrigger>

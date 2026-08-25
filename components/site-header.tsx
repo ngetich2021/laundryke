@@ -1,16 +1,28 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth, signIn, signOut } from "@/auth";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { PwaInstallButton } from "@/components/pwa-install-button";
 
 export async function SiteHeader() {
   const session = await auth();
 
   return (
-    <header className="flex items-center justify-between border-b px-4 py-3">
-      <Link href="/" className="text-lg font-bold tracking-tight">
-        Dr. Wash
-      </Link>
+    <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+      <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <Image
+            src="/icons/icon-192.png"
+            alt="Dr. Wash"
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+          Dr. Wash
+        </Link>
+        <PwaInstallButton />
+      </div>
       <div className="flex items-center gap-3">
         {session?.user && (
           <>

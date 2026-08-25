@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Phone, ExternalLink } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,13 +12,46 @@ import {
 } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PromotedBadge } from "@/components/badge-star";
+import { FacebookBadge, InstagramBadge, TikTokBadge } from "@/components/social-badges";
+import { CallButton } from "@/components/call-button";
 import type { ActiveListing } from "@/lib/listings-data";
 
-const SOCIAL_LINKS: { key: "tiktokUrl" | "facebookUrl" | "instagramUrl"; label: string }[] = [
-  { key: "tiktokUrl", label: "TikTok" },
-  { key: "facebookUrl", label: "Facebook" },
-  { key: "instagramUrl", label: "Instagram" },
-];
+function SocialBadges({ listing }: { listing: ActiveListing }) {
+  return (
+    <>
+      {listing.facebookUrl && (
+        <a
+          href={listing.facebookUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <FacebookBadge />
+        </a>
+      )}
+      {listing.instagramUrl && (
+        <a
+          href={listing.instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <InstagramBadge />
+        </a>
+      )}
+      {listing.tiktokUrl && (
+        <a
+          href={listing.tiktokUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <TikTokBadge />
+        </a>
+      )}
+    </>
+  );
+}
 
 export function ListingCard({ listing }: { listing: ActiveListing }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -27,9 +60,10 @@ export function ListingCard({ listing }: { listing: ActiveListing }) {
     <>
       <Card className="overflow-hidden">
         <CardHeader>
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <CardTitle className="text-base">{listing.businessName}</CardTitle>
             {listing.isPromoted && <PromotedBadge />}
+            <SocialBadges listing={listing} />
           </div>
           <CardDescription className="line-clamp-3">{listing.description}</CardDescription>
         </CardHeader>
@@ -40,43 +74,22 @@ export function ListingCard({ listing }: { listing: ActiveListing }) {
             </p>
           )}
 
-          {listing.phone && (
-            <p className="flex items-center gap-2 text-sm font-medium">
-              <Phone className="size-4" /> {listing.phone}
-            </p>
-          )}
-
-          {SOCIAL_LINKS.some(({ key }) => listing[key]) && (
-            <div className="flex flex-wrap gap-2">
-              {SOCIAL_LINKS.map(
-                ({ key, label }) =>
-                  listing[key] && (
-                    <a
-                      key={key}
-                      href={listing[key]!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {label} <ExternalLink className="size-3" />
-                    </a>
-                  )
-              )}
-            </div>
-          )}
-
-          <Button size="sm" variant="outline" onClick={() => setDetailsOpen(true)}>
-            More details
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {listing.phone && <CallButton phone={listing.phone} />}
+            <Button size="sm" variant="outline" onClick={() => setDetailsOpen(true)}>
+              More details
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex flex-wrap items-center gap-1.5">
               {listing.businessName}
               {listing.isPromoted && <PromotedBadge />}
+              <SocialBadges listing={listing} />
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-3 text-sm">

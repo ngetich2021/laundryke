@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, Plus, Sparkles } from "lucide-react";
+import { Loader2, Plus, Sparkles, CircleCheck, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -48,7 +48,10 @@ export function AdvertisePanel({
   const router = useRouter();
   const activeListings = listings.filter((listing) => listing.isActive);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [polling, setPolling] = useState(false);
+  const [paymentState, setPaymentState] = useState<"form" | "polling" | "success" | "failed">(
+    "form"
+  );
+  const [failureReason, setFailureReason] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
@@ -71,24 +74,26 @@ export function AdvertisePanel({
   }, []);
 
   function pollPayment(paymentId: string) {
-    setPolling(true);
     let attempts = 0;
     pollRef.current = setInterval(async () => {
       attempts += 1;
       const status = await getPaymentStatus(paymentId);
       if (status?.status === "SUCCESS") {
         clearInterval(pollRef.current!);
-        setPolling(false);
-        toast.success("Payment confirmed — listing promoted!");
+        setPaymentState("success");
         router.refresh();
+        setTimeout(() => {
+          setDialogOpen(false);
+          setPaymentState("form");
+        }, 1600);
       } else if (status?.status === "FAILED") {
         clearInterval(pollRef.current!);
-        setPolling(false);
-        toast.error(status.resultDesc ?? "Payment was not completed");
+        setPaymentState("failed");
+        setFailureReason(status.resultDesc ?? "Payment was not completed");
       } else if (attempts >= 20) {
         clearInterval(pollRef.current!);
-        setPolling(false);
-        toast.info("Still waiting for M-Pesa confirmation. Check back shortly.");
+        setPaymentState("failed");
+        setFailureReason("Still waiting for M-Pesa confirmation. Check back shortly.");
       }
     }, 3000);
   }
@@ -101,9 +106,17 @@ export function AdvertisePanel({
       return;
     }
     if (result?.success) {
-      toast.success(result.message ?? "Check your phone to complete payment");
-      setDialogOpen(false);
+      setPaymentState("polling");
       pollPayment(result.paymentId);
+    }
+  }
+
+  function handleDialogOpenChange(open: boolean) {
+    if (!open && paymentState === "polling") return;
+    setDialogOpen(open);
+    if (!open) {
+      setPaymentState("form");
+      setFailureReason(null);
     }
   }
 
@@ -181,67 +194,109 @@ export function AdvertisePanel({
         }
       />
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="size-4" /> Promote a listing
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FieldGroup>
-              <Field>
-                <FieldLabel>Listing</FieldLabel>
-                <Select
-                  items={Object.fromEntries(
-                    activeListings.map((listing) => [listing.id, listing.businessName])
-                  )}
-                  value={watch("listingId")}
-                  onValueChange={(value) => {
-                    if (value) setValue("listingId", value, { shouldValidate: true });
+
+          {paymentState === "form" && (
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel>Listing</FieldLabel>
+                  <Select
+                    items={Object.fromEntries(
+                      activeListings.map((listing) => [listing.id, listing.businessName])
+                    )}
+                    value={watch("listingId")}
+                    onValueChange={(value) => {
+                      if (value) setValue("listingId", value, { shouldValidate: true });
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeListings.map((listing) => (
+                        <SelectItem key={listing.id} value={listing.id}>
+                          {listing.businessName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError errors={[errors.listingId]} />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="days">Days to feature</FieldLabel>
+                  <Input id="days" type="number" min={1} max={30} {...register("days")} />
+                  <FieldDescription>KES {advertiseAmount(days)} total</FieldDescription>
+                  <FieldError errors={[errors.days]} />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="phone">M-Pesa phone number</FieldLabel>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="0712345678"
+                    {...register("phone")}
+                  />
+                  <FieldError errors={[errors.phone]} />
+                </Field>
+
+                <DialogFooter className="mt-2">
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                    Pay KES {advertiseAmount(days)}
+                  </Button>
+                </DialogFooter>
+              </FieldGroup>
+            </form>
+          )}
+
+          {paymentState === "polling" && (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <Loader2 className="size-8 animate-spin text-muted-foreground" />
+              <p className="font-medium">STK push sent to your phone</p>
+              <p className="max-w-xs text-sm text-muted-foreground">
+                Enter your M-Pesa PIN to complete the payment. This can take up to a minute —
+                don&apos;t close this window.
+              </p>
+            </div>
+          )}
+
+          {paymentState === "success" && (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <CircleCheck className="size-8 text-green-600" />
+              <p className="font-medium">Payment successful — listing promoted!</p>
+            </div>
+          )}
+
+          {paymentState === "failed" && (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <CircleX className="size-8 text-destructive" />
+              <p className="font-medium">Payment not completed</p>
+              <p className="max-w-xs text-sm text-muted-foreground">{failureReason}</p>
+              <div className="mt-2 flex gap-2">
+                <Button variant="outline" onClick={() => handleDialogOpenChange(false)}>
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setPaymentState("form");
+                    setFailureReason(null);
                   }}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeListings.map((listing) => (
-                      <SelectItem key={listing.id} value={listing.id}>
-                        {listing.businessName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError errors={[errors.listingId]} />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="days">Days to feature</FieldLabel>
-                <Input id="days" type="number" min={1} max={30} {...register("days")} />
-                <FieldDescription>KES {advertiseAmount(days)} total</FieldDescription>
-                <FieldError errors={[errors.days]} />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="phone">M-Pesa phone number</FieldLabel>
-                <Input
-                  id="phone"
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="0712345678"
-                  {...register("phone")}
-                />
-                <FieldError errors={[errors.phone]} />
-              </Field>
-
-              <DialogFooter className="mt-2">
-                <Button type="submit" disabled={isSubmitting || polling}>
-                  {(isSubmitting || polling) && <Loader2 className="size-4 animate-spin" />}
-                  {polling ? "Waiting for M-Pesa..." : `Pay KES ${advertiseAmount(days)}`}
+                  Try again
                 </Button>
-              </DialogFooter>
-            </FieldGroup>
-          </form>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
