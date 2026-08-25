@@ -8,7 +8,20 @@ const PERMISSIONS_REFRESH_MS = 5 * 60 * 1000;
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  providers: [Google],
+  providers: [
+    // The bare `Google` provider only sets `issuer`, so Auth.js fetches
+    // https://accounts.google.com/.well-known/openid-configuration on every
+    // signIn() call before it can build the redirect URL — a live network
+    // round trip that adds multiple seconds to every "Sign in" click.
+    // Google's authorization endpoint is long-stable, so set it statically
+    // to skip that discovery fetch entirely.
+    Google({
+      authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
+        params: { scope: "openid email profile" },
+      },
+    }),
+  ],
   pages: {
     signIn: "/",
   },

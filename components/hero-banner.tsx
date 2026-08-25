@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Play } from "lucide-react";
 import { VideoPlayer, VideoPlayerFallback } from "@/components/video-player";
 import { ShopDetailsDialog } from "@/components/shop-details-dialog";
 import { getYoutubeThumbnail } from "@/lib/youtube";
@@ -38,14 +37,16 @@ export function HeroBanner({ featured }: { featured: FeaturedListing[] }) {
     return () => clearInterval(id);
   }, [isPlaying, featured.length]);
 
-  function handleClick() {
-    if (!current) return;
-    if (isPlaying) {
-      setDetailsOpen(true);
-    } else {
+  // Browsers only allow autoplay-with-sound after a user gesture. Rather than
+  // requiring a click on the video itself, any click anywhere on the page
+  // counts — so playback starts the moment the visitor does anything at all.
+  useEffect(() => {
+    function handlePageClick() {
       setIsPlaying(true);
     }
-  }
+    document.addEventListener("click", handlePageClick, { once: true });
+    return () => document.removeEventListener("click", handlePageClick);
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4">
@@ -55,35 +56,31 @@ export function HeroBanner({ featured }: { featured: FeaturedListing[] }) {
       <div className="relative aspect-40/9 w-full overflow-hidden rounded-xl border bg-muted shadow-sm">
         {current ? (
           <>
-            {isPlaying ? (
-              <VideoPlayer
-                key={current.id}
-                source={current.videoSource!}
-                url={current.videoUrl!}
-                title={current.businessName}
-                autoPlay
-                loop
-              />
-            ) : (
-              <FeaturedPoster listing={current} />
-            )}
+            <div className="pointer-events-none h-full w-full">
+              {isPlaying ? (
+                <VideoPlayer
+                  key={current.id}
+                  source={current.videoSource!}
+                  url={current.videoUrl!}
+                  title={current.businessName}
+                  autoPlay
+                  loop
+                />
+              ) : (
+                <FeaturedPoster listing={current} />
+              )}
+            </div>
 
             <button
               type="button"
-              onClick={handleClick}
-              aria-label={
-                isPlaying ? `View details for ${current.businessName}` : `Play featured video`
-              }
+              onClick={() => setDetailsOpen(true)}
+              aria-label={`View details for ${current.businessName}`}
               className="absolute inset-0 h-full w-full cursor-pointer bg-transparent"
             />
 
-            {!isPlaying && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="rounded-full bg-black/50 p-4">
-                  <Play className="size-8 fill-white text-white" />
-                </div>
-              </div>
-            )}
+            <span className="pointer-events-none absolute right-3 bottom-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+              Interested?
+            </span>
           </>
         ) : (
           <VideoPlayerFallback />
