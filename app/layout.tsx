@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { ChatWidget } from "@/components/chat-widget";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,14 +37,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <SiteFooter />
-        <ChatWidget />
-        <Toaster position="top-center" />
-        <ServiceWorkerRegister />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <SiteFooter />
+          <ChatWidget />
+          <Toaster position="top-center" />
+          <ServiceWorkerRegister />
+        </ThemeProvider>
       </body>
     </html>
   );

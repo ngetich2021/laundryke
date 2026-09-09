@@ -4,6 +4,7 @@ import { auth, signIn, signOut } from "@/auth";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { PwaInstallButton } from "@/components/pwa-install-button";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export async function SiteHeader() {
   const session = await auth();
@@ -35,6 +36,7 @@ export async function SiteHeader() {
             </Avatar>
           </>
         )}
+        <ModeToggle />
         <form
           action={async () => {
             "use server";
