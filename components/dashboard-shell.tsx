@@ -9,6 +9,9 @@ import {
   UserRound,
   ShieldCheck,
   Tag,
+  LifeBuoy,
+  Gift,
+  Users,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { HeroBanner } from "@/components/hero-banner";
@@ -19,9 +22,17 @@ import { SettingsPanel } from "@/components/settings-panel";
 import { AccountPanel } from "@/components/account-panel";
 import { AdminPanel } from "@/components/admin-panel";
 import { PricingPanel } from "@/components/pricing-panel";
+import { SupportPanel } from "@/components/support-panel";
+import { ReferralsPanel } from "@/components/referrals-panel";
+import { ClientsPanel } from "@/components/clients-panel";
 import { isAdminLike, type PermissionKey } from "@/lib/permissions";
 import type { Listing, Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/client";
 import type { FeaturedListing } from "@/lib/listings-data";
+import type { getMyTickets, getAllTicketsForAdmin } from "@/app/actions/support";
+import type { getMyFeedback, getAllFeedbackForAdmin } from "@/app/actions/feedback";
+import type { getMyReferralOffers, getAllReferralOffersForAdmin } from "@/app/actions/referrals";
+import type { getRecentHealthLogs } from "@/app/actions/health";
+import type { AdminChatMessage } from "@/components/admin-support-panel";
 
 type PaymentWithListing = Payment & { listing: { businessName: string } };
 
@@ -82,6 +93,14 @@ export function DashboardShell({
   adminPrices,
   adminRoles,
   roleOptions,
+  myTickets,
+  myFeedback,
+  myReferralOffers,
+  adminTickets,
+  adminFeedback,
+  adminChatMessages,
+  adminReferralOffers,
+  healthLogs,
 }: {
   user: {
     id: string;
@@ -102,6 +121,14 @@ export function DashboardShell({
   adminPrices: AdminPriceItem[] | null;
   adminRoles: AdminRole[] | null;
   roleOptions: RoleOption[] | null;
+  myTickets: Awaited<ReturnType<typeof getMyTickets>>;
+  myFeedback: Awaited<ReturnType<typeof getMyFeedback>>;
+  myReferralOffers: Awaited<ReturnType<typeof getMyReferralOffers>>;
+  adminTickets: Awaited<ReturnType<typeof getAllTicketsForAdmin>> | null;
+  adminFeedback: Awaited<ReturnType<typeof getAllFeedbackForAdmin>> | null;
+  adminChatMessages: AdminChatMessage[] | null;
+  adminReferralOffers: Awaited<ReturnType<typeof getAllReferralOffersForAdmin>> | null;
+  healthLogs: Awaited<ReturnType<typeof getRecentHealthLogs>> | null;
 }) {
   const [tab, setTab] = useState("browse");
   const showAdminTab = isAdminLike({ role: user.role, permissions });
@@ -134,6 +161,10 @@ export function DashboardShell({
           <Tag className="size-4" />
           pricing
         </TabsTrigger>
+        <TabsTrigger value="clients" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
+          <Users className="size-4" />
+          clients
+        </TabsTrigger>
         <TabsTrigger value="settings" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <Settings className="size-4" />
           settings
@@ -141,6 +172,14 @@ export function DashboardShell({
         <TabsTrigger value="account" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
           <UserRound className="size-4" />
           Account
+        </TabsTrigger>
+        <TabsTrigger value="referrals" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
+          <Gift className="size-4" />
+          referrals
+        </TabsTrigger>
+        <TabsTrigger value="support" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
+          <LifeBuoy className="size-4" />
+          support
         </TabsTrigger>
         {showAdminTab && (
           <TabsTrigger value="admin" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
@@ -171,6 +210,10 @@ export function DashboardShell({
           <PricingPanel listings={myListings} />
         </TabsContent>
 
+        <TabsContent value="clients" className="mt-0 px-4 py-6">
+          <ClientsPanel listings={myListings} />
+        </TabsContent>
+
         <TabsContent value="settings" className="mt-0 px-4 py-6">
           <SettingsPanel
             name={myProfile.name ?? ""}
@@ -188,6 +231,14 @@ export function DashboardShell({
           />
         </TabsContent>
 
+        <TabsContent value="referrals" className="mt-0 px-4 py-6">
+          <ReferralsPanel listings={myReferralOffers} />
+        </TabsContent>
+
+        <TabsContent value="support" className="mt-0 px-4 py-6">
+          <SupportPanel initialTickets={myTickets} initialFeedback={myFeedback} />
+        </TabsContent>
+
         {showAdminTab && (
           <TabsContent value="admin" className="mt-0 px-4 py-6">
             <AdminPanel
@@ -199,6 +250,11 @@ export function DashboardShell({
               roleOptions={roleOptions ?? []}
               currentUserId={user.id}
               permissions={permissions}
+              tickets={adminTickets ?? []}
+              feedback={adminFeedback ?? []}
+              chatMessages={adminChatMessages ?? []}
+              referralOffers={adminReferralOffers ?? []}
+              healthLogs={healthLogs ?? []}
             />
           </TabsContent>
         )}

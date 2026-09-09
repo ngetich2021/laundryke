@@ -4,6 +4,7 @@ export const PERMISSIONS = [
   "MANAGE_PAYMENTS",
   "MANAGE_PRICING",
   "MANAGE_ROLES",
+  "MANAGE_SUPPORT",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[number];
@@ -14,6 +15,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   MANAGE_PAYMENTS: "Manage payments",
   MANAGE_PRICING: "Manage pricing",
   MANAGE_ROLES: "Manage roles",
+  MANAGE_SUPPORT: "Manage support, feedback & referrals",
 };
 
 export type PermissionedUser = {

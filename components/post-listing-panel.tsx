@@ -54,6 +54,7 @@ export function PostListingPanel({
   const [editing, setEditing] = useState<Listing | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
 
@@ -83,6 +84,7 @@ export function PostListingPanel({
   const videoSource = watch("videoSource");
   const latitude = watch("latitude");
   const longitude = watch("longitude");
+  const imageUrl = watch("imageUrl");
 
   function startEdit(listing: Listing) {
     setEditing(listing);
@@ -164,10 +166,36 @@ export function PostListingPanel({
     }
   }
 
+  async function handleLogoUpload(file: File) {
+    setLogoUploading(true);
+    try {
+      const result = await uploadToCloudinary(file);
+      setValue("imageUrl", result.url, { shouldValidate: true });
+      toast.success("Logo uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setLogoUploading(false);
+    }
+  }
+
   const columns: ColumnDef<Listing, unknown>[] = [
     {
       accessorKey: "businessName",
       header: sortableHeader<Listing>("Business"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={row.original.imageUrl}
+              alt=""
+              className="size-6 shrink-0 rounded object-cover"
+            />
+          ) : null}
+          {row.original.businessName}
+        </div>
+      ),
     },
     {
       id: "status",
@@ -262,6 +290,48 @@ export function PostListingPanel({
                 <FieldLabel htmlFor="businessName">Business name</FieldLabel>
                 <Input id="businessName" {...register("businessName")} />
                 <FieldError errors={[errors.businessName]} />
+              </Field>
+
+              <Field>
+                <FieldLabel>Shop logo (optional)</FieldLabel>
+                <div className="flex items-center gap-3">
+                  {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt="Shop logo"
+                      className="size-12 shrink-0 rounded-lg border object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-xs text-muted-foreground">
+                      No logo
+                    </div>
+                  )}
+                  <label
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "cursor-pointer",
+                      logoUploading && "pointer-events-none opacity-50"
+                    )}
+                  >
+                    {logoUploading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Upload className="size-4" />
+                    )}
+                    {logoUploading ? "Uploading..." : imageUrl ? "Change logo" : "Upload logo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file);
+                      }}
+                    />
+                  </label>
+                </div>
+                <FieldError errors={[errors.imageUrl]} />
               </Field>
 
               <Field>

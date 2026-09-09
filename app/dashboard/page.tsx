@@ -12,6 +12,10 @@ import {
   getAllPricesForAdmin,
 } from "@/app/actions/admin";
 import { getAllRoles, getRoleOptions } from "@/app/actions/roles";
+import { getMyTickets, getAllTicketsForAdmin, getAllChatMessagesForAdmin } from "@/app/actions/support";
+import { getMyFeedback, getAllFeedbackForAdmin } from "@/app/actions/feedback";
+import { getMyReferralOffers, getAllReferralOffersForAdmin } from "@/app/actions/referrals";
+import { getRecentHealthLogs } from "@/app/actions/health";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { PERMISSIONS, hasPermission, type PermissionKey } from "@/lib/permissions";
 
@@ -28,6 +32,7 @@ export default async function DashboardPage() {
   const canPayments = hasPermission(me, "MANAGE_PAYMENTS");
   const canPricing = hasPermission(me, "MANAGE_PRICING");
   const canRoles = hasPermission(me, "MANAGE_ROLES");
+  const canSupport = hasPermission(me, "MANAGE_SUPPORT");
 
   const [
     count,
@@ -41,6 +46,14 @@ export default async function DashboardPage() {
     adminPrices,
     adminRoles,
     roleOptions,
+    myTickets,
+    myFeedback,
+    myReferralOffers,
+    adminTickets,
+    adminFeedback,
+    adminChatMessages,
+    adminReferralOffers,
+    healthLogs,
   ] = await Promise.all([
     getActiveListingsCount(),
     getFeaturedListings(),
@@ -53,6 +66,14 @@ export default async function DashboardPage() {
     canPricing ? getAllPricesForAdmin() : Promise.resolve(null),
     canRoles ? getAllRoles() : Promise.resolve(null),
     canUsers ? getRoleOptions() : Promise.resolve(null),
+    getMyTickets(),
+    getMyFeedback(),
+    getMyReferralOffers(),
+    canSupport ? getAllTicketsForAdmin() : Promise.resolve(null),
+    canSupport ? getAllFeedbackForAdmin() : Promise.resolve(null),
+    canSupport ? getAllChatMessagesForAdmin() : Promise.resolve(null),
+    canSupport ? getAllReferralOffersForAdmin() : Promise.resolve(null),
+    canSupport ? getRecentHealthLogs() : Promise.resolve(null),
   ]);
 
   return (
@@ -78,6 +99,14 @@ export default async function DashboardPage() {
         adminPrices={adminPrices}
         adminRoles={adminRoles}
         roleOptions={roleOptions}
+        myTickets={myTickets}
+        myFeedback={myFeedback}
+        myReferralOffers={myReferralOffers}
+        adminTickets={adminTickets}
+        adminFeedback={adminFeedback}
+        adminChatMessages={adminChatMessages}
+        adminReferralOffers={adminReferralOffers}
+        healthLogs={healthLogs}
       />
     </>
   );

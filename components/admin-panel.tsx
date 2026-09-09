@@ -16,6 +16,9 @@ import {
   Wallet,
   Tag,
   ShieldCheck,
+  LifeBuoy,
+  Gift,
+  HeartPulse,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +49,13 @@ import { setUserRole, toggleListingActive, adminDeleteListing, assignCustomRole 
 import { createRole, updateRole, deleteRole } from "@/app/actions/roles";
 import { PERMISSIONS, PERMISSION_LABELS, type PermissionKey } from "@/lib/permissions";
 import type { Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/client";
+import { AdminSupportPanel, type AdminChatMessage } from "@/components/admin-support-panel";
+import { AdminReferralsPanel } from "@/components/admin-referrals-panel";
+import { AdminHealthPanel } from "@/components/admin-health-panel";
+import type { getAllTicketsForAdmin } from "@/app/actions/support";
+import type { getAllFeedbackForAdmin } from "@/app/actions/feedback";
+import type { getAllReferralOffersForAdmin } from "@/app/actions/referrals";
+import type { getRecentHealthLogs } from "@/app/actions/health";
 
 type AdminUser = {
   id: string;
@@ -104,6 +114,11 @@ export function AdminPanel({
   roleOptions,
   currentUserId,
   permissions,
+  tickets,
+  feedback,
+  chatMessages,
+  referralOffers,
+  healthLogs,
 }: {
   users: AdminUser[];
   listings: AdminListing[];
@@ -113,6 +128,11 @@ export function AdminPanel({
   roleOptions: RoleOption[];
   currentUserId: string;
   permissions: PermissionKey[];
+  tickets: Awaited<ReturnType<typeof getAllTicketsForAdmin>>;
+  feedback: Awaited<ReturnType<typeof getAllFeedbackForAdmin>>;
+  chatMessages: AdminChatMessage[];
+  referralOffers: Awaited<ReturnType<typeof getAllReferralOffersForAdmin>>;
+  healthLogs: Awaited<ReturnType<typeof getRecentHealthLogs>>;
 }) {
   const router = useRouter();
   const can = (key: PermissionKey) => permissions.includes(key);
@@ -518,7 +538,9 @@ export function AdminPanel({
         ? "payments"
         : can("MANAGE_PRICING")
           ? "prices"
-          : "roles";
+          : can("MANAGE_ROLES")
+            ? "roles"
+            : "support";
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -547,6 +569,21 @@ export function AdminPanel({
           {can("MANAGE_ROLES") && (
             <TabsTrigger value="roles" className="gap-1.5">
               <ShieldCheck className="size-4" /> Roles
+            </TabsTrigger>
+          )}
+          {can("MANAGE_SUPPORT") && (
+            <TabsTrigger value="support" className="gap-1.5">
+              <LifeBuoy className="size-4" /> Support
+            </TabsTrigger>
+          )}
+          {can("MANAGE_SUPPORT") && (
+            <TabsTrigger value="referrals" className="gap-1.5">
+              <Gift className="size-4" /> Referrals
+            </TabsTrigger>
+          )}
+          {can("MANAGE_SUPPORT") && (
+            <TabsTrigger value="health" className="gap-1.5">
+              <HeartPulse className="size-4" /> Health
             </TabsTrigger>
           )}
         </TabsList>
@@ -642,6 +679,24 @@ export function AdminPanel({
                 </Button>
               }
             />
+          </TabsContent>
+        )}
+
+        {can("MANAGE_SUPPORT") && (
+          <TabsContent value="support" className="mt-4">
+            <AdminSupportPanel tickets={tickets} feedback={feedback} chatMessages={chatMessages} />
+          </TabsContent>
+        )}
+
+        {can("MANAGE_SUPPORT") && (
+          <TabsContent value="referrals" className="mt-4">
+            <AdminReferralsPanel offers={referralOffers} />
+          </TabsContent>
+        )}
+
+        {can("MANAGE_SUPPORT") && (
+          <TabsContent value="health" className="mt-4">
+            <AdminHealthPanel initialLogs={healthLogs} />
           </TabsContent>
         )}
       </Tabs>

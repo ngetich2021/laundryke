@@ -5,7 +5,7 @@ const BASE_URL = IS_PRODUCTION
   ? "https://api.safaricom.co.ke"
   : "https://sandbox.safaricom.co.ke";
 
-async function getAccessToken(): Promise<string> {
+export async function getAccessToken(): Promise<string> {
   const key = process.env.MPESA_CONSUMER_KEY!;
   const secret = process.env.MPESA_CONSUMER_SECRET!;
   const credentials = Buffer.from(`${key}:${secret}`).toString("base64");

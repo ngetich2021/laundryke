@@ -33,6 +33,37 @@ enum PermissionKey {
   MANAGE_PAYMENTS
   MANAGE_PRICING
   MANAGE_ROLES
+  MANAGE_SUPPORT
+}
+
+enum ReferralRewardType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum MessageAuthorRole {
+  USER
+  ADMIN
+  AI
+}
+
+enum FeedbackCategory {
+  BUG
+  SUGGESTION
+  COMPLIMENT
+  OTHER
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
 }
 
 model User {
@@ -48,11 +79,15 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  accounts   Account[]
-  sessions   Session[]
-  listings   Listing[]
-  payments   Payment[]
-  customRole CustomRole? @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
+  accounts       Account[]
+  sessions       Session[]
+  listings       Listing[]
+  payments       Payment[]
+  supportTickets SupportTicket[]
+  supportMessages SupportMessage[]
+  feedback       Feedback[]
+  chatMessages   ChatMessage[]
+  customRole     CustomRole? @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
 }
 
 model CustomRole {
@@ -129,12 +164,20 @@ model Listing {
   isActive           Boolean      @default(true)
   promotedUntil      DateTime?
   videoPromotedUntil DateTime?
+  referralRewardType  ReferralRewardType?
+  referralRewardValue Int?
+  referralDescription String?
+  referralClickCount  Int         @default(0)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
-  owner      User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  payments   Payment[]
-  priceItems PriceItem[]
+  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+  priceItems      PriceItem[]
+  clients         Client[]
+  visits          Visit[]
+  loyaltyProgram  LoyaltyProgram?
+  campaignTargets CampaignTarget[]
 
   @@index([ownerId])
   @@index([isActive, createdAt])
@@ -176,4 +219,138 @@ model Payment {
 
   @@index([listingId])
   @@index([userId])
+}
+
+model SupportTicket {
+  id        String       @id @default(nanoid(10))
+  userId    String
+  subject   String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([userId])
+  @@index([status, createdAt])
+}
+
+model SupportMessage {
+  id         String            @id @default(nanoid(10))
+  ticketId   String
+  authorId   String?
+  authorRole MessageAuthorRole
+  body       String
+  createdAt  DateTime          @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+}
+
+model Feedback {
+  id        String           @id @default(nanoid(10))
+  userId    String
+  rating    Int
+  category  FeedbackCategory @default(OTHER)
+  message   String
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id        String   @id @default(nanoid(10))
+  userId    String?
+  role      ChatRole
+  content   String
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+model HealthCheckLog {
+  id        String   @id @default(nanoid(10))
+  status    String
+  report    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Client {
+  id                 String   @id @default(nanoid(10))
+  listingId          String
+  name               String
+  phone              String?
+  email              String?
+  notes              String?
+  loyaltyPunches     Int      @default(0)
+  loyaltyRedemptions Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  visits  Visit[]
+
+  @@index([listingId])
+}
+
+model Visit {
+  id        String   @id @default(nanoid(10))
+  clientId  String
+  listingId String
+  amountKes Int?
+  notes     String?
+  visitedAt DateTime @default(now())
+
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([listingId, visitedAt])
+}
+
+model LoyaltyProgram {
+  id                String   @id @default(nanoid(10))
+  listingId         String   @unique
+  punchesRequired   Int
+  rewardDescription String
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+enum CampaignMetric {
+  NEW_CLIENTS
+  VISITS
+  REVENUE_KES
+  CUSTOM
+}
+
+model CampaignTarget {
+  id          String         @id @default(nanoid(10))
+  listingId   String
+  title       String
+  metric      CampaignMetric
+  targetValue Int
+  manualValue Int            @default(0)
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
 }

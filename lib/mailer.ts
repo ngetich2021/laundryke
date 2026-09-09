@@ -18,6 +18,34 @@ export async function sendMail(opts: { to: string; subject: string; html: string
   });
 }
 
+export async function verifyMailTransport(): Promise<void> {
+  await transporter.verify();
+}
+
+export async function sendSupportReply({
+  to,
+  subject,
+  body,
+}: {
+  to: string;
+  subject: string;
+  body: string;
+}) {
+  await sendMail({
+    to,
+    subject: `Re: ${subject} — Dr. Wash Support`,
+    html: `
+      <p>Hi,</p>
+      <p>${body.replace(/\n/g, "<br/>")}</p>
+      <p style="color:#666;font-size:12px;margin-top:24px">Reply from the Support tab in your Dr. Wash dashboard.</p>
+    `,
+  });
+}
+
+export async function sendHealthReport({ to, html }: { to: string; html: string }) {
+  await sendMail({ to, subject: "Dr. Wash — Daily system health report", html });
+}
+
 export async function sendAdvertiseReceipt({
   to,
   businessName,
