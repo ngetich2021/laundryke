@@ -15,7 +15,6 @@ import {
   Store,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CountBadge } from "@/components/ui/count-badge";
 import { HeroBanner } from "@/components/hero-banner";
 import { ListingGrid } from "@/components/listing-grid";
 import { PostListingPanel } from "@/components/post-listing-panel";
@@ -175,10 +174,9 @@ export function DashboardShell({
         </TabsTrigger>
         <TabsTrigger value="support" className={TAB_TRIGGER_CLASS}>
           <LifeBuoy className="size-4" />
-          support
-          {myTicketUnread > 0 && (
-            <CountBadge count={myTicketUnread} className="absolute top-1.5 right-2.5" />
-          )}
+          <span className={myTicketUnread > 0 ? "font-semibold text-blue-600 dark:text-blue-400" : undefined}>
+            {myTicketUnread > 0 ? `support (${myTicketUnread})` : "support"}
+          </span>
         </TabsTrigger>
         <TabsTrigger value="account" className={TAB_TRIGGER_CLASS}>
           <UserRound className="size-4" />
@@ -187,10 +185,9 @@ export function DashboardShell({
         {showAdminTab && (
           <TabsTrigger value="admin" className={TAB_TRIGGER_CLASS}>
             <ShieldCheck className="size-4" />
-            admin
-            {adminTicketUnread > 0 && (
-              <CountBadge count={adminTicketUnread} className="absolute top-1.5 right-2.5" />
-            )}
+            <span className={adminTicketUnread > 0 ? "font-semibold text-blue-600 dark:text-blue-400" : undefined}>
+              {adminTicketUnread > 0 ? `admin (${adminTicketUnread})` : "admin"}
+            </span>
           </TabsTrigger>
         )}
       </TabsList>
