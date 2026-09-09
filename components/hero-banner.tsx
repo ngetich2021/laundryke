@@ -49,7 +49,7 @@ export function HeroBanner({ featured }: { featured: FeaturedListing[] }) {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4">
+    <div className="mx-auto w-full max-w-3xl px-4 pb-6">
       <h1 className="py-6 text-center text-2xl font-bold tracking-tight sm:text-3xl">
         we ensure you are always tidy
       </h1>

@@ -174,13 +174,11 @@ export function DashboardShell({
           clients
         </TabsTrigger>
         <TabsTrigger value="support" className={TAB_TRIGGER_CLASS}>
-          <span className="relative">
-            <LifeBuoy className="size-4" />
-            {myTicketUnread > 0 && (
-              <CountBadge count={myTicketUnread} className="absolute -top-2.5 -right-2.5" />
-            )}
-          </span>
+          <LifeBuoy className="size-4" />
           support
+          {myTicketUnread > 0 && (
+            <CountBadge count={myTicketUnread} className="absolute top-1.5 right-2.5" />
+          )}
         </TabsTrigger>
         <TabsTrigger value="account" className={TAB_TRIGGER_CLASS}>
           <UserRound className="size-4" />
@@ -188,13 +186,11 @@ export function DashboardShell({
         </TabsTrigger>
         {showAdminTab && (
           <TabsTrigger value="admin" className={TAB_TRIGGER_CLASS}>
-            <span className="relative">
-              <ShieldCheck className="size-4" />
-              {adminTicketUnread > 0 && (
-                <CountBadge count={adminTicketUnread} className="absolute -top-2.5 -right-2.5" />
-              )}
-            </span>
+            <ShieldCheck className="size-4" />
             admin
+            {adminTicketUnread > 0 && (
+              <CountBadge count={adminTicketUnread} className="absolute top-1.5 right-2.5" />
+            )}
           </TabsTrigger>
         )}
       </TabsList>
