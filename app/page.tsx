@@ -17,9 +17,11 @@ export default async function HomePage(props: PageProps<"/">) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <SiteHeader />
-      {ref && <ReferralBanner listingId={ref} />}
-      <HeroBanner featured={featured} />
+      <div className="sticky top-0 z-30 flex flex-col bg-background">
+        <SiteHeader />
+        {ref && <ReferralBanner listingId={ref} />}
+        <HeroBanner featured={featured} />
+      </div>
       <ListingGrid initialCount={count} />
     </div>
   );

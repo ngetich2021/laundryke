@@ -77,37 +77,35 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <>
-      <SiteHeader />
-      <DashboardShell
-        user={{
-          id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image,
-          role: session.user.role,
-        }}
-        myProfile={myProfile}
-        initialCount={count}
-        featured={featured}
-        myListings={myListings}
-        myPayments={myPayments}
-        permissions={permissions}
-        adminUsers={adminUsers}
-        adminListings={adminListings}
-        adminPayments={adminPayments}
-        adminPrices={adminPrices}
-        adminRoles={adminRoles}
-        roleOptions={roleOptions}
-        myTickets={myTickets}
-        myFeedback={myFeedback}
-        myReferralOffers={myReferralOffers}
-        adminTickets={adminTickets}
-        adminFeedback={adminFeedback}
-        adminChatMessages={adminChatMessages}
-        adminReferralOffers={adminReferralOffers}
-        healthLogs={healthLogs}
-      />
-    </>
+    <DashboardShell
+      header={<SiteHeader />}
+      user={{
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+        role: session.user.role,
+      }}
+      myProfile={myProfile}
+      initialCount={count}
+      featured={featured}
+      myListings={myListings}
+      myPayments={myPayments}
+      permissions={permissions}
+      adminUsers={adminUsers}
+      adminListings={adminListings}
+      adminPayments={adminPayments}
+      adminPrices={adminPrices}
+      adminRoles={adminRoles}
+      roleOptions={roleOptions}
+      myTickets={myTickets}
+      myFeedback={myFeedback}
+      myReferralOffers={myReferralOffers}
+      adminTickets={adminTickets}
+      adminFeedback={adminFeedback}
+      adminChatMessages={adminChatMessages}
+      adminReferralOffers={adminReferralOffers}
+      healthLogs={healthLogs}
+    />
   );
 }

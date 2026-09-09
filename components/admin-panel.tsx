@@ -547,7 +547,7 @@ export function AdminPanel({
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <Tabs defaultValue={defaultTab}>
-        <TabsList variant="line">
+        <TabsList variant="line" className="w-full justify-start overflow-x-auto">
           {can("MANAGE_USERS") && (
             <TabsTrigger value="users" className="gap-1.5">
               <Users className="size-4" /> Users

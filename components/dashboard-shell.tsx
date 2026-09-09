@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Search,
   PlusSquare,
@@ -86,6 +86,7 @@ const TAB_TRIGGER_CLASS =
   "h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs";
 
 export function DashboardShell({
+  header,
   user,
   myProfile,
   initialCount,
@@ -108,6 +109,7 @@ export function DashboardShell({
   adminReferralOffers,
   healthLogs,
 }: {
+  header: ReactNode;
   user: {
     id: string;
     name: string | null | undefined;
@@ -154,43 +156,46 @@ export function DashboardShell({
       onValueChange={(value) => setTab(value as string)}
       className="flex flex-1 flex-col gap-0"
     >
-      <HeroBanner featured={featured} />
+      <div className="sticky top-0 z-30 flex flex-col bg-background">
+        {header}
+        <HeroBanner featured={featured} />
 
-      <TabsList
-        variant="line"
-        className="sticky top-0 z-20 h-14 w-full justify-around gap-0 overflow-x-auto rounded-none border-y bg-background/95 p-0 backdrop-blur"
-      >
-        <TabsTrigger value="browse" className={TAB_TRIGGER_CLASS}>
-          <Search className="size-4" />
-          Browse
-        </TabsTrigger>
-        <TabsTrigger value="shop" className={TAB_TRIGGER_CLASS}>
-          <Store className="size-4" />
-          shop
-        </TabsTrigger>
-        <TabsTrigger value="clients" className={TAB_TRIGGER_CLASS}>
-          <Users className="size-4" />
-          clients
-        </TabsTrigger>
-        <TabsTrigger value="support" className={TAB_TRIGGER_CLASS}>
-          <LifeBuoy className="size-4" />
-          <span className={myTicketUnread > 0 ? "font-semibold text-blue-600 dark:text-blue-400" : undefined}>
-            {myTicketUnread > 0 ? `support (${myTicketUnread})` : "support"}
-          </span>
-        </TabsTrigger>
-        <TabsTrigger value="account" className={TAB_TRIGGER_CLASS}>
-          <UserRound className="size-4" />
-          account
-        </TabsTrigger>
-        {showAdminTab && (
-          <TabsTrigger value="admin" className={TAB_TRIGGER_CLASS}>
-            <ShieldCheck className="size-4" />
-            <span className={adminTicketUnread > 0 ? "font-semibold text-blue-600 dark:text-blue-400" : undefined}>
-              {adminTicketUnread > 0 ? `admin (${adminTicketUnread})` : "admin"}
+        <TabsList
+          variant="line"
+          className="h-14 w-full justify-around gap-0 overflow-x-auto rounded-none border-y bg-background/95 p-0 backdrop-blur"
+        >
+          <TabsTrigger value="browse" className={TAB_TRIGGER_CLASS}>
+            <Search className="size-4" />
+            Browse
+          </TabsTrigger>
+          <TabsTrigger value="shop" className={TAB_TRIGGER_CLASS}>
+            <Store className="size-4" />
+            shop
+          </TabsTrigger>
+          <TabsTrigger value="clients" className={TAB_TRIGGER_CLASS}>
+            <Users className="size-4" />
+            clients
+          </TabsTrigger>
+          <TabsTrigger value="support" className={TAB_TRIGGER_CLASS}>
+            <LifeBuoy className="size-4" />
+            <span className={myTicketUnread > 0 ? "font-semibold text-blue-600 dark:text-blue-400" : undefined}>
+              {myTicketUnread > 0 ? `support (${myTicketUnread})` : "support"}
             </span>
           </TabsTrigger>
-        )}
-      </TabsList>
+          <TabsTrigger value="account" className={TAB_TRIGGER_CLASS}>
+            <UserRound className="size-4" />
+            account
+          </TabsTrigger>
+          {showAdminTab && (
+            <TabsTrigger value="admin" className={TAB_TRIGGER_CLASS}>
+              <ShieldCheck className="size-4" />
+              <span className={adminTicketUnread > 0 ? "font-semibold text-blue-600 dark:text-blue-400" : undefined}>
+                {adminTicketUnread > 0 ? `admin (${adminTicketUnread})` : "admin"}
+              </span>
+            </TabsTrigger>
+          )}
+        </TabsList>
+      </div>
 
       <div className="flex-1">
         <TabsContent value="browse" className="mt-0">

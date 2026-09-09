@@ -1,6 +1,7 @@
 import "server-only";
 import { GROQ_MODEL } from "@/lib/constants";
 import { buildSystemPrompt } from "@/lib/ai-knowledge";
+import { getActiveListingsCount } from "@/lib/listings-data";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
 
@@ -9,6 +10,8 @@ export type ChatTurn = { role: "user" | "assistant"; content: string };
 export async function askAssistant(history: ChatTurn[], message: string): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
+
+  const activeShopCount = await getActiveListingsCount();
 
   const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
     method: "POST",
@@ -25,7 +28,7 @@ export async function askAssistant(history: ChatTurn[], message: string): Promis
       // a support-chat widget.
       reasoning_effort: "low",
       messages: [
-        { role: "system", content: buildSystemPrompt() },
+        { role: "system", content: buildSystemPrompt(activeShopCount) },
         ...history,
         { role: "user", content: message },
       ],
