@@ -177,7 +177,7 @@ export function DashboardShell({
           <span className="relative">
             <LifeBuoy className="size-4" />
             {myTicketUnread > 0 && (
-              <CountBadge count={myTicketUnread} className="absolute -top-2 -right-2" />
+              <CountBadge count={myTicketUnread} className="absolute -top-2.5 -right-2.5" />
             )}
           </span>
           support
@@ -191,7 +191,7 @@ export function DashboardShell({
             <span className="relative">
               <ShieldCheck className="size-4" />
               {adminTicketUnread > 0 && (
-                <CountBadge count={adminTicketUnread} className="absolute -top-2 -right-2" />
+                <CountBadge count={adminTicketUnread} className="absolute -top-2.5 -right-2.5" />
               )}
             </span>
             admin
