@@ -180,6 +180,7 @@ export function PricingPanel({ listings }: { listings: Listing[] }) {
             createdAt: item.createdAt.toISOString(),
           }))}
           emptyMessage="You haven't added any prices yet."
+          onRowClick={startEdit}
           toolbar={
             <Button size="sm" onClick={startCreate} disabled={!listingId}>
               <Plus className="size-4" />

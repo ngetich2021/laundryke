@@ -13,12 +13,14 @@ import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field
 import { DataTable, sortableHeader, type ColumnDef } from "@/components/ui/data-table";
 import { loyaltyProgramSchema } from "@/lib/validations";
 import { setLoyaltyProgram, getMyLoyaltyProgram, getLoyaltyLeaderboard } from "@/app/actions/loyalty";
+import { ClientDetailDialog } from "@/components/clients-panel";
 
 type LeaderboardRow = Awaited<ReturnType<typeof getLoyaltyLeaderboard>>[number];
 
 export function LoyaltyPanel({ listingId }: { listingId: string }) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
   const [isLoading, startLoading] = useTransition();
+  const [detailClientId, setDetailClientId] = useState<string | null>(null);
 
   const {
     register,
@@ -33,6 +35,7 @@ export function LoyaltyPanel({ listingId }: { listingId: string }) {
   });
 
   const isActive = watch("isActive");
+  const punchesRequired = isActive ? Number(watch("punchesRequired")) || null : null;
 
   function refresh() {
     startLoading(async () => {
@@ -149,9 +152,19 @@ export function LoyaltyPanel({ listingId }: { listingId: string }) {
               redemptions: c.loyaltyRedemptions,
             }))}
             emptyMessage="No clients yet — add punches from the Clients tab."
+            onRowClick={(row) => setDetailClientId(row.id)}
           />
         )}
       </div>
+
+      {detailClientId && (
+        <ClientDetailDialog
+          clientId={detailClientId}
+          punchesRequired={punchesRequired}
+          onClose={() => setDetailClientId(null)}
+          onChanged={refresh}
+        />
+      )}
     </div>
   );
 }

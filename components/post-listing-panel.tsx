@@ -271,6 +271,7 @@ export function PostListingPanel({
           createdAt: listing.createdAt.toISOString(),
         }))}
         emptyMessage="You don't have any shops yet."
+        onRowClick={startEdit}
         toolbar={
           <Button size="sm" variant="outline" onClick={startCreate} disabled={!hasContact}>
             <Plus className="size-4" />

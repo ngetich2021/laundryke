@@ -1,12 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { Gift } from "lucide-react";
 import { DataTable, sortableHeader, type ColumnDef } from "@/components/ui/data-table";
+import { DetailDialog, type DetailField } from "@/components/ui/detail-dialog";
 import type { getAllReferralOffersForAdmin } from "@/app/actions/referrals";
 
 type AdminReferralOffer = Awaited<ReturnType<typeof getAllReferralOffersForAdmin>>[number];
 
+function rewardText(offer: AdminReferralOffer): string {
+  return offer.referralRewardType === "PERCENTAGE"
+    ? `${offer.referralRewardValue}% off`
+    : `KES ${offer.referralRewardValue} off`;
+}
+
 export function AdminReferralsPanel({ offers }: { offers: AdminReferralOffer[] }) {
+  const [detail, setDetail] = useState<AdminReferralOffer | null>(null);
+
   const columns: ColumnDef<AdminReferralOffer, unknown>[] = [
     { accessorKey: "businessName", header: sortableHeader<AdminReferralOffer>("Shop") },
     {
@@ -17,10 +27,7 @@ export function AdminReferralsPanel({ offers }: { offers: AdminReferralOffer[] }
     {
       id: "reward",
       header: "Reward",
-      cell: ({ row }) =>
-        row.original.referralRewardType === "PERCENTAGE"
-          ? `${row.original.referralRewardValue}% off`
-          : `KES ${row.original.referralRewardValue} off`,
+      cell: ({ row }) => rewardText(row.original),
     },
     {
       accessorKey: "referralClickCount",
@@ -29,9 +36,19 @@ export function AdminReferralsPanel({ offers }: { offers: AdminReferralOffer[] }
     {
       id: "description",
       header: "Message",
-      cell: ({ row }) => row.original.referralDescription ?? "—",
+      cell: ({ row }) => <span className="line-clamp-1">{row.original.referralDescription ?? "—"}</span>,
     },
   ];
+
+  const fields: DetailField[] = detail
+    ? [
+        { label: "Shop", value: detail.businessName },
+        { label: "Owner", value: detail.owner.name ?? detail.owner.email },
+        { label: "Reward", value: rewardText(detail) },
+        { label: "Clicks", value: detail.referralClickCount },
+        { label: "Message", value: detail.referralDescription ?? "—" },
+      ]
+    : [];
 
   return (
     <div className="flex flex-col gap-3">
@@ -51,6 +68,14 @@ export function AdminReferralsPanel({ offers }: { offers: AdminReferralOffer[] }
           clicks: o.referralClickCount,
         }))}
         emptyMessage="No shop has set up a referral offer yet."
+        onRowClick={setDetail}
+      />
+
+      <DetailDialog
+        open={!!detail}
+        onOpenChange={(open) => !open && setDetail(null)}
+        title="Referral offer"
+        fields={fields}
       />
     </div>
   );

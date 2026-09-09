@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CountBadge } from "@/components/ui/count-badge";
+import { DetailDialog, type DetailField } from "@/components/ui/detail-dialog";
 import {
   Select,
   SelectContent,
@@ -219,6 +220,8 @@ export function AdminSupportPanel({
   chatMessages: AdminChatMessage[];
 }) {
   const [openTicket, setOpenTicket] = useState<AdminTicket | null>(null);
+  const [detailFeedback, setDetailFeedback] = useState<AdminFeedback | null>(null);
+  const [detailChat, setDetailChat] = useState<AdminChatMessage | null>(null);
 
   const ticketColumns: ColumnDef<AdminTicket, unknown>[] = [
     {
@@ -287,6 +290,25 @@ export function AdminSupportPanel({
       cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
     },
   ];
+
+  const feedbackFields: DetailField[] = detailFeedback
+    ? [
+        { label: "User", value: detailFeedback.user.name ?? detailFeedback.user.email },
+        { label: "Rating", value: `${detailFeedback.rating} / 5` },
+        { label: "Category", value: detailFeedback.category },
+        { label: "Message", value: detailFeedback.message },
+        { label: "Date", value: new Date(detailFeedback.createdAt).toLocaleString() },
+      ]
+    : [];
+
+  const chatFields: DetailField[] = detailChat
+    ? [
+        { label: "User", value: detailChat.user?.name ?? detailChat.user?.email ?? "Anonymous visitor" },
+        { label: "Role", value: detailChat.role === "ASSISTANT" ? "Assistant" : "Visitor" },
+        { label: "Message", value: detailChat.content },
+        { label: "Date", value: new Date(detailChat.createdAt).toLocaleString() },
+      ]
+    : [];
 
   const chatColumns: ColumnDef<AdminChatMessage, unknown>[] = [
     {
@@ -360,6 +382,7 @@ export function AdminSupportPanel({
               createdAt: f.createdAt.toISOString(),
             }))}
             emptyMessage="No feedback submitted yet."
+            onRowClick={setDetailFeedback}
           />
         </TabsContent>
 
@@ -375,11 +398,26 @@ export function AdminSupportPanel({
               createdAt: c.createdAt.toISOString(),
             }))}
             emptyMessage="No chat activity yet."
+            onRowClick={setDetailChat}
           />
         </TabsContent>
       </Tabs>
 
       {openTicket && <TicketDialog ticket={openTicket} onClose={() => setOpenTicket(null)} />}
+
+      <DetailDialog
+        open={!!detailFeedback}
+        onOpenChange={(open) => !open && setDetailFeedback(null)}
+        title="Feedback"
+        fields={feedbackFields}
+      />
+
+      <DetailDialog
+        open={!!detailChat}
+        onOpenChange={(open) => !open && setDetailChat(null)}
+        title="Chat message"
+        fields={chatFields}
+      />
     </div>
   );
 }

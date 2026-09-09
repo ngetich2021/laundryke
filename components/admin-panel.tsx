@@ -675,6 +675,7 @@ export function AdminPanel({
                 members: r._count.users,
               }))}
               emptyMessage="No custom roles yet."
+              onRowClick={startEditRole}
               toolbar={
                 <Button size="sm" onClick={startCreateRole}>
                   <Plus className="size-4" />

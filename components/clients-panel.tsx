@@ -134,7 +134,7 @@ function ClientFormDialog({
   );
 }
 
-function ClientDetailDialog({
+export function ClientDetailDialog({
   clientId,
   punchesRequired,
   onClose,

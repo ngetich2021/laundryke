@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, sortableHeader, type ColumnDef } from "@/components/ui/data-table";
+import { DetailDialog, type DetailField } from "@/components/ui/detail-dialog";
 import { advertiseSchema, type AdvertiseInput } from "@/lib/validations";
 import { advertiseAmount, videoAddonAmount, totalPromoteAmount } from "@/lib/constants";
 import { initiateAdvertisePayment, getPaymentStatus } from "@/app/actions/payments";
@@ -53,6 +54,7 @@ export function AdvertisePanel({
     "form"
   );
   const [failureReason, setFailureReason] = useState<string | null>(null);
+  const [detailPayment, setDetailPayment] = useState<PaymentWithListing | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
@@ -175,6 +177,21 @@ export function AdvertisePanel({
     },
   ];
 
+  const paymentFields: DetailField[] = detailPayment
+    ? [
+        { label: "Listing", value: detailPayment.listing.businessName },
+        { label: "Amount", value: `KES ${detailPayment.amount}` },
+        { label: "Days", value: detailPayment.days },
+        { label: "Includes video", value: detailPayment.includesVideo ? "Yes" : "No" },
+        { label: "Phone", value: detailPayment.phone },
+        { label: "Status", value: detailPayment.status },
+        { label: "M-Pesa receipt", value: detailPayment.mpesaReceipt ?? "—" },
+        { label: "Result", value: detailPayment.resultDesc ?? "—" },
+        { label: "Date", value: new Date(detailPayment.createdAt).toLocaleString() },
+        { label: "Payment ID", value: detailPayment.id },
+      ]
+    : [];
+
   if (activeListings.length === 0) {
     return (
       <div className="mx-auto max-w-md py-10 text-center text-sm text-muted-foreground">
@@ -202,12 +219,20 @@ export function AdvertisePanel({
           createdAt: payment.createdAt.toISOString(),
         }))}
         emptyMessage="No promotions yet."
+        onRowClick={setDetailPayment}
         toolbar={
           <Button size="sm" onClick={() => setDialogOpen(true)}>
             <Plus className="size-4" />
             Add promotion
           </Button>
         }
+      />
+
+      <DetailDialog
+        open={!!detailPayment}
+        onOpenChange={(open) => !open && setDetailPayment(null)}
+        title="Promotion details"
+        fields={paymentFields}
       />
 
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
