@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Send, LifeBuoy, MessageSquareText, Bot, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CountBadge } from "@/components/ui/count-badge";
 import {
   Select,
   SelectContent,
@@ -17,9 +19,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, sortableHeader, type ColumnDef } from "@/components/ui/data-table";
-import { adminReplyToTicket, setTicketStatus, type getAllTicketsForAdmin } from "@/app/actions/support";
+import {
+  adminReplyToTicket,
+  setTicketStatus,
+  markTicketReadByAdmin,
+  type getAllTicketsForAdmin,
+} from "@/app/actions/support";
 import type { getAllFeedbackForAdmin } from "@/app/actions/feedback";
 import type { TicketStatus } from "@/lib/generated/prisma/client";
+import { hasUnreadForAdmin, countUnread } from "@/lib/support-unread";
 import { cn } from "@/lib/utils";
 
 type AdminTicket = Awaited<ReturnType<typeof getAllTicketsForAdmin>>[number];
@@ -40,9 +48,17 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
 };
 
 function TicketDialog({ ticket, onClose }: { ticket: AdminTicket; onClose: () => void }) {
+  const router = useRouter();
   const [reply, setReply] = useState("");
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<TicketStatus>(ticket.status);
+
+  useEffect(() => {
+    if (hasUnreadForAdmin(ticket)) {
+      markTicketReadByAdmin(ticket.id).then(() => router.refresh());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket.id]);
 
   function sendReply() {
     if (!reply.trim()) return;
@@ -205,7 +221,18 @@ export function AdminSupportPanel({
   const [openTicket, setOpenTicket] = useState<AdminTicket | null>(null);
 
   const ticketColumns: ColumnDef<AdminTicket, unknown>[] = [
-    { accessorKey: "subject", header: sortableHeader<AdminTicket>("Subject") },
+    {
+      accessorKey: "subject",
+      header: sortableHeader<AdminTicket>("Subject"),
+      cell: ({ row }) => (
+        <span className="flex items-center gap-1.5">
+          {row.original.subject}
+          {hasUnreadForAdmin(row.original) && (
+            <span className="inline-flex size-2 rounded-full bg-blue-600" />
+          )}
+        </span>
+      ),
+    },
     {
       id: "requester",
       header: sortableHeader<AdminTicket>("Requester"),
@@ -294,6 +321,7 @@ export function AdminSupportPanel({
         <TabsList variant="line">
           <TabsTrigger value="tickets" className="gap-1.5">
             <LifeBuoy className="size-4" /> Tickets
+            <CountBadge count={countUnread(tickets, "ADMIN")} />
           </TabsTrigger>
           <TabsTrigger value="feedback" className="gap-1.5">
             <MessageSquareText className="size-4" /> Feedback

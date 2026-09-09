@@ -12,8 +12,10 @@ import {
   LifeBuoy,
   Gift,
   Users,
+  Store,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { CountBadge } from "@/components/ui/count-badge";
 import { HeroBanner } from "@/components/hero-banner";
 import { ListingGrid } from "@/components/listing-grid";
 import { PostListingPanel } from "@/components/post-listing-panel";
@@ -26,6 +28,7 @@ import { SupportPanel } from "@/components/support-panel";
 import { ReferralsPanel } from "@/components/referrals-panel";
 import { ClientsPanel } from "@/components/clients-panel";
 import { isAdminLike, type PermissionKey } from "@/lib/permissions";
+import { countUnread } from "@/lib/support-unread";
 import type { Listing, Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/client";
 import type { FeaturedListing } from "@/lib/listings-data";
 import type { getMyTickets, getAllTicketsForAdmin } from "@/app/actions/support";
@@ -79,6 +82,10 @@ type AdminRole = {
 
 type RoleOption = { id: string; name: string };
 
+// Compact icon+label style shared by every top-level tab trigger.
+const TAB_TRIGGER_CLASS =
+  "h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs";
+
 export function DashboardShell({
   user,
   myProfile,
@@ -131,7 +138,16 @@ export function DashboardShell({
   healthLogs: Awaited<ReturnType<typeof getRecentHealthLogs>> | null;
 }) {
   const [tab, setTab] = useState("browse");
+  const [accountTab, setAccountTab] = useState("profile");
   const showAdminTab = isAdminLike({ role: user.role, permissions });
+
+  const myTicketUnread = countUnread(myTickets, "USER");
+  const adminTicketUnread = adminTickets ? countUnread(adminTickets, "ADMIN") : 0;
+
+  function goToSettings() {
+    setTab("account");
+    setAccountTab("settings");
+  }
 
   return (
     <Tabs
@@ -145,45 +161,39 @@ export function DashboardShell({
         variant="line"
         className="sticky top-0 z-20 h-14 w-full justify-around gap-0 overflow-x-auto rounded-none border-y bg-background/95 p-0 backdrop-blur"
       >
-        <TabsTrigger value="browse" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="browse" className={TAB_TRIGGER_CLASS}>
           <Search className="size-4" />
           Browse
         </TabsTrigger>
-        <TabsTrigger value="post" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <PlusSquare className="size-4" />
-          post
+        <TabsTrigger value="shop" className={TAB_TRIGGER_CLASS}>
+          <Store className="size-4" />
+          shop
         </TabsTrigger>
-        <TabsTrigger value="advertise" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <Megaphone className="size-4" />
-          advertise
-        </TabsTrigger>
-        <TabsTrigger value="pricing" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <Tag className="size-4" />
-          pricing
-        </TabsTrigger>
-        <TabsTrigger value="clients" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
+        <TabsTrigger value="clients" className={TAB_TRIGGER_CLASS}>
           <Users className="size-4" />
           clients
         </TabsTrigger>
-        <TabsTrigger value="settings" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <Settings className="size-4" />
-          settings
-        </TabsTrigger>
-        <TabsTrigger value="account" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <UserRound className="size-4" />
-          Account
-        </TabsTrigger>
-        <TabsTrigger value="referrals" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <Gift className="size-4" />
-          referrals
-        </TabsTrigger>
-        <TabsTrigger value="support" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-          <LifeBuoy className="size-4" />
+        <TabsTrigger value="support" className={TAB_TRIGGER_CLASS}>
+          <span className="relative">
+            <LifeBuoy className="size-4" />
+            {myTicketUnread > 0 && (
+              <CountBadge count={myTicketUnread} className="absolute -top-2 -right-2" />
+            )}
+          </span>
           support
         </TabsTrigger>
+        <TabsTrigger value="account" className={TAB_TRIGGER_CLASS}>
+          <UserRound className="size-4" />
+          account
+        </TabsTrigger>
         {showAdminTab && (
-          <TabsTrigger value="admin" className="h-full min-w-16 shrink-0 flex-col gap-1 rounded-none text-xs">
-            <ShieldCheck className="size-4" />
+          <TabsTrigger value="admin" className={TAB_TRIGGER_CLASS}>
+            <span className="relative">
+              <ShieldCheck className="size-4" />
+              {adminTicketUnread > 0 && (
+                <CountBadge count={adminTicketUnread} className="absolute -top-2 -right-2" />
+              )}
+            </span>
             admin
           </TabsTrigger>
         )}
@@ -194,49 +204,80 @@ export function DashboardShell({
           <ListingGrid initialCount={initialCount} />
         </TabsContent>
 
-        <TabsContent value="post" className="mt-0 px-4 py-6">
-          <PostListingPanel
-            initialListings={myListings}
-            hasContact={!!myProfile.phone}
-            onNavigateToSettings={() => setTab("settings")}
-          />
-        </TabsContent>
+        <TabsContent value="shop" className="mt-0 px-4 py-6">
+          <Tabs defaultValue="post" className="mx-auto w-full max-w-3xl">
+            <TabsList variant="line">
+              <TabsTrigger value="post" className="gap-1.5">
+                <PlusSquare className="size-4" /> Post
+              </TabsTrigger>
+              <TabsTrigger value="pricing" className="gap-1.5">
+                <Tag className="size-4" /> Pricing
+              </TabsTrigger>
+              <TabsTrigger value="advertise" className="gap-1.5">
+                <Megaphone className="size-4" /> Advertise
+              </TabsTrigger>
+              <TabsTrigger value="referrals" className="gap-1.5">
+                <Gift className="size-4" /> Referrals
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="advertise" className="mt-0 px-4 py-6">
-          <AdvertisePanel listings={myListings} payments={myPayments} />
-        </TabsContent>
+            <TabsContent value="post" className="mt-4">
+              <PostListingPanel
+                initialListings={myListings}
+                hasContact={!!myProfile.phone}
+                onNavigateToSettings={goToSettings}
+              />
+            </TabsContent>
 
-        <TabsContent value="pricing" className="mt-0 px-4 py-6">
-          <PricingPanel listings={myListings} />
+            <TabsContent value="pricing" className="mt-4">
+              <PricingPanel listings={myListings} />
+            </TabsContent>
+
+            <TabsContent value="advertise" className="mt-4">
+              <AdvertisePanel listings={myListings} payments={myPayments} />
+            </TabsContent>
+
+            <TabsContent value="referrals" className="mt-4">
+              <ReferralsPanel listings={myReferralOffers} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="clients" className="mt-0 px-4 py-6">
           <ClientsPanel listings={myListings} />
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-0 px-4 py-6">
-          <SettingsPanel
-            name={myProfile.name ?? ""}
-            phone={myProfile.phone ?? ""}
-            locationDescription={myProfile.locationDescription ?? ""}
-          />
+        <TabsContent value="support" className="mt-0 px-4 py-6">
+          <SupportPanel initialTickets={myTickets} initialFeedback={myFeedback} />
         </TabsContent>
 
         <TabsContent value="account" className="mt-0 px-4 py-6">
-          <AccountPanel
-            name={user.name}
-            email={user.email}
-            image={user.image}
-            role={user.role}
-          />
-        </TabsContent>
+          <Tabs
+            value={accountTab}
+            onValueChange={(value) => setAccountTab(value as string)}
+            className="mx-auto w-full max-w-2xl"
+          >
+            <TabsList variant="line">
+              <TabsTrigger value="profile" className="gap-1.5">
+                <UserRound className="size-4" /> Profile
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5">
+                <Settings className="size-4" /> Settings
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="referrals" className="mt-0 px-4 py-6">
-          <ReferralsPanel listings={myReferralOffers} />
-        </TabsContent>
+            <TabsContent value="profile" className="mt-4">
+              <AccountPanel name={user.name} email={user.email} image={user.image} role={user.role} />
+            </TabsContent>
 
-        <TabsContent value="support" className="mt-0 px-4 py-6">
-          <SupportPanel initialTickets={myTickets} initialFeedback={myFeedback} />
+            <TabsContent value="settings" className="mt-4">
+              <SettingsPanel
+                name={myProfile.name ?? ""}
+                phone={myProfile.phone ?? ""}
+                locationDescription={myProfile.locationDescription ?? ""}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {showAdminTab && (

@@ -4,6 +4,8 @@ import { ListingGrid } from "@/components/listing-grid";
 import { ReferralBanner } from "@/components/referral-banner";
 import { getActiveListingsCount, getFeaturedListings } from "@/lib/listings-data";
 
+export const revalidate = 10;
+
 export default async function HomePage(props: PageProps<"/">) {
   const searchParams = await props.searchParams;
   const ref = typeof searchParams.ref === "string" ? searchParams.ref : null;

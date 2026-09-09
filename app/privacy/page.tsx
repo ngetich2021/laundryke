@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SUPPORT_CONTACT_EMAIL } from "@/lib/constants";
 
 export const metadata = { title: "Privacy Policy — Dr. Wash" };
+export const revalidate = 10;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

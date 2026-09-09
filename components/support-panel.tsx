@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -34,8 +35,14 @@ import {
   type SupportMessageInput,
   type FeedbackInput,
 } from "@/lib/validations";
-import { createSupportTicket, replyToTicket, getMyTickets } from "@/app/actions/support";
+import {
+  createSupportTicket,
+  replyToTicket,
+  getMyTickets,
+  markTicketReadByUser,
+} from "@/app/actions/support";
 import { submitFeedback, getMyFeedback } from "@/app/actions/feedback";
+import { hasUnreadForUser } from "@/lib/support-unread";
 import { cn } from "@/lib/utils";
 import type { SupportTicket, SupportMessage, Feedback } from "@/lib/generated/prisma/client";
 
@@ -172,7 +179,16 @@ function TicketThread({ ticket, onReplied }: { ticket: TicketWithMessages; onRep
 }
 
 function TicketsTab({ tickets, refresh }: { tickets: TicketWithMessages[]; refresh: () => void }) {
+  const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  function toggle(ticket: TicketWithMessages) {
+    const next = expandedId === ticket.id ? null : ticket.id;
+    setExpandedId(next);
+    if (next && hasUnreadForUser(ticket)) {
+      markTicketReadByUser(ticket.id).then(() => router.refresh());
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -190,14 +206,15 @@ function TicketsTab({ tickets, refresh }: { tickets: TicketWithMessages[]; refre
         <div className="flex flex-col gap-3">
           {tickets.map((ticket) => (
             <Card key={ticket.id}>
-              <button
-                type="button"
-                className="w-full text-left"
-                onClick={() => setExpandedId(expandedId === ticket.id ? null : ticket.id)}
-              >
+              <button type="button" className="w-full text-left" onClick={() => toggle(ticket)}>
                 <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
                   <div>
-                    <CardTitle className="text-sm">{ticket.subject}</CardTitle>
+                    <CardTitle className="flex items-center gap-1.5 text-sm">
+                      {ticket.subject}
+                      {hasUnreadForUser(ticket) && (
+                        <span className="inline-flex size-2 rounded-full bg-blue-600" />
+                      )}
+                    </CardTitle>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {new Date(ticket.updatedAt).toLocaleString()} · {ticket.messages.length} message
                       {ticket.messages.length === 1 ? "" : "s"}

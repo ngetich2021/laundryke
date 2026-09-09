@@ -51,12 +51,34 @@ export async function replyToTicket(ticketId: string, input: unknown) {
     }),
     prisma.supportTicket.update({
       where: { id: ticketId },
-      data: { status: ticket.status === "CLOSED" ? "OPEN" : ticket.status },
+      data: {
+        status: ticket.status === "CLOSED" ? "OPEN" : ticket.status,
+        userLastReadAt: new Date(),
+      },
     }),
   ]);
 
   revalidatePath("/dashboard");
   return { success: true as const };
+}
+
+export async function markTicketReadByUser(ticketId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  await prisma.supportTicket.updateMany({
+    where: { id: ticketId, userId: session.user.id },
+    data: { userLastReadAt: new Date() },
+  });
+}
+
+export async function markTicketReadByAdmin(ticketId: string) {
+  await requirePermission("MANAGE_SUPPORT");
+
+  await prisma.supportTicket.update({
+    where: { id: ticketId },
+    data: { adminLastReadAt: new Date() },
+  });
 }
 
 export async function getMyTickets() {
@@ -121,7 +143,10 @@ export async function adminReplyToTicket(ticketId: string, input: unknown) {
         body: parsed.data.body,
       },
     }),
-    prisma.supportTicket.update({ where: { id: ticketId }, data: { status: "IN_PROGRESS" } }),
+    prisma.supportTicket.update({
+      where: { id: ticketId },
+      data: { status: "IN_PROGRESS", adminLastReadAt: new Date() },
+    }),
   ]);
 
   sendSupportReply({

@@ -52,10 +52,12 @@ import type { Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/
 import { AdminSupportPanel, type AdminChatMessage } from "@/components/admin-support-panel";
 import { AdminReferralsPanel } from "@/components/admin-referrals-panel";
 import { AdminHealthPanel } from "@/components/admin-health-panel";
+import { CountBadge } from "@/components/ui/count-badge";
 import type { getAllTicketsForAdmin } from "@/app/actions/support";
 import type { getAllFeedbackForAdmin } from "@/app/actions/feedback";
 import type { getAllReferralOffersForAdmin } from "@/app/actions/referrals";
 import type { getRecentHealthLogs } from "@/app/actions/health";
+import { countUnread } from "@/lib/support-unread";
 
 type AdminUser = {
   id: string;
@@ -574,6 +576,7 @@ export function AdminPanel({
           {can("MANAGE_SUPPORT") && (
             <TabsTrigger value="support" className="gap-1.5">
               <LifeBuoy className="size-4" /> Support
+              <CountBadge count={countUnread(tickets, "ADMIN")} />
             </TabsTrigger>
           )}
           {can("MANAGE_SUPPORT") && (
