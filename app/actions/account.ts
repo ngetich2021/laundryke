@@ -40,3 +40,12 @@ export async function updateProfile(input: unknown) {
   revalidatePath("/dashboard");
   return { success: true as const };
 }
+
+export async function deleteMyAccount() {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  await prisma.user.delete({ where: { id: session.user.id } });
+
+  await signOut({ redirectTo: "/" });
+}

@@ -34,7 +34,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field";
 import {
@@ -46,7 +48,13 @@ import {
 } from "@/components/ui/select";
 import { DataTable, sortableHeader, type ColumnDef } from "@/components/ui/data-table";
 import { DetailDialog, type DetailField } from "@/components/ui/detail-dialog";
-import { setUserRole, toggleListingActive, adminDeleteListing, assignCustomRole } from "@/app/actions/admin";
+import {
+  setUserRole,
+  toggleListingActive,
+  adminDeleteListing,
+  adminDeleteUser,
+  assignCustomRole,
+} from "@/app/actions/admin";
 import { createRole, updateRole, deleteRole } from "@/app/actions/roles";
 import { PERMISSIONS, PERMISSION_LABELS, type PermissionKey } from "@/lib/permissions";
 import type { Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/client";
@@ -148,6 +156,8 @@ export function AdminPanel({
   const [pendingListingId, setPendingListingId] = useState<string | null>(null);
   const [pendingRoleId, setPendingRoleId] = useState<string | null>(null);
 
+  const [deleteUserTarget, setDeleteUserTarget] = useState<AdminUser | null>(null);
+
   const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
   const [detailListing, setDetailListing] = useState<AdminListing | null>(null);
   const [detailPayment, setDetailPayment] = useState<AdminPayment | null>(null);
@@ -209,6 +219,20 @@ export function AdminPanel({
     toggleListingActive(listingId, isActive)
       .then(() => router.refresh())
       .finally(() => setPendingListingId(null));
+  }
+
+  function handleDeleteUser(userId: string) {
+    setPendingUserId(userId);
+    adminDeleteUser(userId)
+      .then(() => {
+        toast.success("User deleted");
+        setDeleteUserTarget(null);
+        router.refresh();
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Couldn't delete user");
+      })
+      .finally(() => setPendingUserId(null));
   }
 
   function handleDeleteListing(listingId: string) {
@@ -307,6 +331,27 @@ export function AdminPanel({
             ))}
           </SelectContent>
         </Select>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <Button
+          size="icon-sm"
+          variant="outline"
+          disabled={row.original.id === currentUserId || pendingUserId === row.original.id}
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeleteUserTarget(row.original);
+          }}
+        >
+          {pendingUserId === row.original.id ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Trash2 className="size-4" />
+          )}
+        </Button>
       ),
     },
   ];
@@ -727,6 +772,34 @@ export function AdminPanel({
         title="User details"
         fields={userFields}
       />
+
+      <Dialog
+        open={!!deleteUserTarget}
+        onOpenChange={(open) => !open && setDeleteUserTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {deleteUserTarget?.name ?? deleteUserTarget?.email}?</DialogTitle>
+            <DialogDescription>
+              This permanently deletes this user&apos;s account, listings, payments, and all
+              other data associated with it. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="destructive"
+              disabled={pendingUserId === deleteUserTarget?.id}
+              onClick={() => deleteUserTarget && handleDeleteUser(deleteUserTarget.id)}
+            >
+              {pendingUserId === deleteUserTarget?.id && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
+              Delete user
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <DetailDialog
         open={!!detailListing}
         onOpenChange={(open) => !open && setDetailListing(null)}

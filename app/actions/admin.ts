@@ -31,6 +31,15 @@ export async function setUserRole(userId: string, role: "USER" | "ADMIN") {
   revalidatePath("/dashboard");
 }
 
+export async function adminDeleteUser(userId: string) {
+  const session = await requirePermission("MANAGE_USERS");
+  if (session.user.id === userId) {
+    throw new Error("You cannot delete your own account here — use Delete account in Account settings");
+  }
+  await prisma.user.delete({ where: { id: userId } });
+  revalidatePath("/dashboard");
+}
+
 export async function assignCustomRole(userId: string, customRoleId: string | null) {
   await requirePermission("MANAGE_USERS");
   await prisma.user.update({
