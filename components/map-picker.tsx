@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "@/lib/leaflet-setup";
-import { LocateFixed, Loader2 } from "lucide-react";
+import { LocateFixed, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { resolveLocationInput } from "@/app/actions/geocode";
 
 const TILE_LAYERS = {
   satellite: {
@@ -51,8 +53,12 @@ export function MapPicker({
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const locatingRef = useRef(false);
   const confirmingRef = useRef(false);
+  const searchingRef = useRef(false);
 
   function handleUseMyLocation() {
     if (locatingRef.current) return;
@@ -78,6 +84,24 @@ export function MapPicker({
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  }
+
+  async function handleSearch() {
+    const trimmed = query.trim();
+    if (!trimmed || searchingRef.current) return;
+    searchingRef.current = true;
+    setSearching(true);
+    setSearchError(null);
+    const result = await resolveLocationInput(trimmed);
+    searchingRef.current = false;
+    setSearching(false);
+    if (result.type === "error") {
+      setSearchError(result.message);
+      return;
+    }
+    const coords = { latitude: result.latitude, longitude: result.longitude };
+    setMarker(coords);
+    setFlyTarget([coords.latitude, coords.longitude]);
   }
 
   function handleConfirmClick() {
@@ -132,6 +156,33 @@ export function MapPicker({
           )}
         </Button>
       </div>
+
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          placeholder="Paste a shared location, or type a place e.g. Nairobi"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSearch();
+            }
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={handleSearch}
+          disabled={searching || !query.trim()}
+          className="shrink-0"
+        >
+          {searching ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+          Find
+        </Button>
+      </div>
+      {searchError && <p className="text-center text-sm text-destructive">{searchError}</p>}
 
       <div className="relative h-56 w-full overflow-hidden rounded-lg border">
         <MapContainer center={center} zoom={marker ? 15 : 12} scrollWheelZoom className="h-full w-full">

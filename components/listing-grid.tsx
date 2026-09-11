@@ -56,8 +56,10 @@ export function ListingGrid({ initialCount }: { initialCount: number }) {
           </div>
         ) : !hasLocated ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Store className="size-4" /> {initialCount} laundr{initialCount === 1 ? "y" : "ies"}{" "}
-            listed
+            <Store className="size-4" />
+            {initialCount >= 100
+              ? `${initialCount} laundries listed`
+              : "Check laundry next to you"}
           </p>
         ) : (
           <>
