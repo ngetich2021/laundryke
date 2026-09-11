@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { PromotedBadge } from "@/components/badge-star";
 import { CallButton } from "@/components/call-button";
+import { WhatsappButton } from "@/components/whatsapp-button";
 import { ShopDetailsDialog, SocialBadges } from "@/components/shop-details-dialog";
 import type { ActiveListing } from "@/lib/listings-data";
 
@@ -56,7 +57,8 @@ export function ListingCard({ listing }: { listing: ActiveListing }) {
           )}
 
           <div className="flex flex-wrap gap-2">
-            {listing.phone && <CallButton phone={listing.phone} />}
+            {listing.phone && <CallButton phone={listing.phone} listingId={listing.id} />}
+            {listing.phone && <WhatsappButton phone={listing.phone} listingId={listing.id} />}
             <Button size="sm" variant="outline" onClick={() => setDetailsOpen(true)}>
               More details
             </Button>

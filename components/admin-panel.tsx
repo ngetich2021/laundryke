@@ -19,6 +19,7 @@ import {
   LifeBuoy,
   Gift,
   HeartPulse,
+  BarChart3,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -52,11 +53,13 @@ import type { Payment, PriceItem, RolePermission } from "@/lib/generated/prisma/
 import { AdminSupportPanel, type AdminChatMessage } from "@/components/admin-support-panel";
 import { AdminReferralsPanel } from "@/components/admin-referrals-panel";
 import { AdminHealthPanel } from "@/components/admin-health-panel";
+import { AdminAnalyticsPanel } from "@/components/admin-analytics-panel";
 import { CountBadge } from "@/components/ui/count-badge";
 import type { getAllTicketsForAdmin } from "@/app/actions/support";
 import type { getAllFeedbackForAdmin } from "@/app/actions/feedback";
 import type { getAllReferralOffersForAdmin } from "@/app/actions/referrals";
 import type { getRecentHealthLogs } from "@/app/actions/health";
+import type { getAnalyticsSummary } from "@/app/actions/analytics";
 import { countUnread } from "@/lib/support-unread";
 
 type AdminUser = {
@@ -121,6 +124,7 @@ export function AdminPanel({
   chatMessages,
   referralOffers,
   healthLogs,
+  analyticsSummary,
 }: {
   users: AdminUser[];
   listings: AdminListing[];
@@ -135,6 +139,7 @@ export function AdminPanel({
   chatMessages: AdminChatMessage[];
   referralOffers: Awaited<ReturnType<typeof getAllReferralOffersForAdmin>>;
   healthLogs: Awaited<ReturnType<typeof getRecentHealthLogs>>;
+  analyticsSummary: Awaited<ReturnType<typeof getAnalyticsSummary>> | null;
 }) {
   const router = useRouter();
   const can = (key: PermissionKey) => permissions.includes(key);
@@ -589,6 +594,11 @@ export function AdminPanel({
               <HeartPulse className="size-4" /> Health
             </TabsTrigger>
           )}
+          {can("MANAGE_SUPPORT") && (
+            <TabsTrigger value="analytics" className="gap-1.5">
+              <BarChart3 className="size-4" /> Analytics
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {can("MANAGE_USERS") && (
@@ -701,6 +711,12 @@ export function AdminPanel({
         {can("MANAGE_SUPPORT") && (
           <TabsContent value="health" className="mt-4">
             <AdminHealthPanel initialLogs={healthLogs} />
+          </TabsContent>
+        )}
+
+        {can("MANAGE_SUPPORT") && (
+          <TabsContent value="analytics" className="mt-4">
+            <AdminAnalyticsPanel summary={analyticsSummary} />
           </TabsContent>
         )}
       </Tabs>

@@ -16,6 +16,7 @@ import { getMyTickets, getAllTicketsForAdmin, getAllChatMessagesForAdmin } from 
 import { getMyFeedback, getAllFeedbackForAdmin } from "@/app/actions/feedback";
 import { getMyReferralOffers, getAllReferralOffersForAdmin } from "@/app/actions/referrals";
 import { getRecentHealthLogs } from "@/app/actions/health";
+import { getAnalyticsSummary } from "@/app/actions/analytics";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { PERMISSIONS, hasPermission, type PermissionKey } from "@/lib/permissions";
 
@@ -54,6 +55,7 @@ export default async function DashboardPage() {
     adminChatMessages,
     adminReferralOffers,
     healthLogs,
+    analyticsSummary,
   ] = await Promise.all([
     getActiveListingsCount(),
     getFeaturedListings(),
@@ -74,6 +76,7 @@ export default async function DashboardPage() {
     canSupport ? getAllChatMessagesForAdmin() : Promise.resolve(null),
     canSupport ? getAllReferralOffersForAdmin() : Promise.resolve(null),
     canSupport ? getRecentHealthLogs() : Promise.resolve(null),
+    canSupport ? getAnalyticsSummary() : Promise.resolve(null),
   ]);
 
   return (
@@ -106,6 +109,7 @@ export default async function DashboardPage() {
       adminChatMessages={adminChatMessages}
       adminReferralOffers={adminReferralOffers}
       healthLogs={healthLogs}
+      analyticsSummary={analyticsSummary}
     />
   );
 }

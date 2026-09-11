@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Gift, X } from "lucide-react";
 import { CallButton } from "@/components/call-button";
+import { WhatsappButton } from "@/components/whatsapp-button";
 import { getReferralListing, recordReferralClick } from "@/app/actions/referrals";
 
 type ReferredListing = {
@@ -59,8 +60,9 @@ export function ReferralBanner({ listingId }: { listingId: string }) {
         </p>
         <p className="mt-0.5 text-muted-foreground">{rewardText(listing)}</p>
         {listing.phone && (
-          <div className="mt-2">
-            <CallButton phone={listing.phone} />
+          <div className="mt-2 flex flex-wrap gap-2">
+            <CallButton phone={listing.phone} listingId={listing.id} />
+            <WhatsappButton phone={listing.phone} listingId={listing.id} />
           </div>
         )}
       </div>

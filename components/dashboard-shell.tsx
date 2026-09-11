@@ -34,6 +34,7 @@ import type { getMyTickets, getAllTicketsForAdmin } from "@/app/actions/support"
 import type { getMyFeedback, getAllFeedbackForAdmin } from "@/app/actions/feedback";
 import type { getMyReferralOffers, getAllReferralOffersForAdmin } from "@/app/actions/referrals";
 import type { getRecentHealthLogs } from "@/app/actions/health";
+import type { getAnalyticsSummary } from "@/app/actions/analytics";
 import type { AdminChatMessage } from "@/components/admin-support-panel";
 
 type PaymentWithListing = Payment & { listing: { businessName: string } };
@@ -108,6 +109,7 @@ export function DashboardShell({
   adminChatMessages,
   adminReferralOffers,
   healthLogs,
+  analyticsSummary,
 }: {
   header: ReactNode;
   user: {
@@ -137,6 +139,7 @@ export function DashboardShell({
   adminChatMessages: AdminChatMessage[] | null;
   adminReferralOffers: Awaited<ReturnType<typeof getAllReferralOffersForAdmin>> | null;
   healthLogs: Awaited<ReturnType<typeof getRecentHealthLogs>> | null;
+  analyticsSummary: Awaited<ReturnType<typeof getAnalyticsSummary>> | null;
 }) {
   const [tab, setTab] = useState("browse");
   const [accountTab, setAccountTab] = useState("profile");
@@ -294,6 +297,7 @@ export function DashboardShell({
               chatMessages={adminChatMessages ?? []}
               referralOffers={adminReferralOffers ?? []}
               healthLogs={healthLogs ?? []}
+              analyticsSummary={analyticsSummary}
             />
           </TabsContent>
         )}

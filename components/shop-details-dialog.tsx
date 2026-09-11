@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PromotedBadge } from "@/components/badge-star";
 import { FacebookBadge, InstagramBadge, TikTokBadge } from "@/components/social-badges";
 import { CallButton } from "@/components/call-button";
+import { WhatsappButton } from "@/components/whatsapp-button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Leaflet touches `window` at module scope, so it can only load client-side.
@@ -15,6 +16,7 @@ const ShopLocationMap = dynamic(
 );
 
 export type ShopDetails = {
+  id: string;
   businessName: string;
   description: string;
   phone: string | null;
@@ -97,7 +99,12 @@ export function ShopDetailsDialog({
 
           <p className="text-muted-foreground">{listing.description}</p>
 
-          {listing.phone && <CallButton phone={listing.phone} />}
+          {listing.phone && (
+            <div className="flex flex-wrap gap-2">
+              <CallButton phone={listing.phone} listingId={listing.id} />
+              <WhatsappButton phone={listing.phone} listingId={listing.id} />
+            </div>
+          )}
 
           {listing.address && (
             <p className="flex items-center gap-2">

@@ -66,6 +66,13 @@ enum ChatRole {
   ASSISTANT
 }
 
+enum AnalyticsEventType {
+  CALL_CLICK
+  WHATSAPP_CLICK
+  LISTING_SUBMITTED
+  PAGE_VIEW
+}
+
 model User {
   id                  String    @id @default(nanoid(10))
   name                String?
@@ -178,6 +185,7 @@ model Listing {
   visits          Visit[]
   loyaltyProgram  LoyaltyProgram?
   campaignTargets CampaignTarget[]
+  analyticsEvents AnalyticsEvent[]
 
   @@index([ownerId])
   @@index([isActive, createdAt])
@@ -285,6 +293,18 @@ model HealthCheckLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id        String             @id @default(nanoid(10))
+  type      AnalyticsEventType
+  listingId String?
+  createdAt DateTime           @default(now())
+
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([listingId])
 }
 
 model Client {

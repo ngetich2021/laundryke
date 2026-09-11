@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { recordAnalyticsEvent } from "@/app/actions/analytics";
 import { cn } from "@/lib/utils";
 
 function isMobileDevice() {
   return /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
 }
 
-export function CallButton({ phone }: { phone: string }) {
+export function CallButton({ phone, listingId }: { phone: string; listingId?: string }) {
   const [mobile, setMobile] = useState(false);
   const [revealed, setRevealed] = useState(false);
 
@@ -32,7 +33,10 @@ export function CallButton({ phone }: { phone: string }) {
     return (
       <a
         href={`tel:${phone}`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          recordAnalyticsEvent("CALL_CLICK", listingId);
+        }}
         className={cn(buttonVariants({ size: "sm", variant: "outline" }), "gap-1.5")}
       >
         <Phone className="size-4" />
@@ -50,6 +54,7 @@ export function CallButton({ phone }: { phone: string }) {
       onClick={(e) => {
         e.stopPropagation();
         setRevealed(true);
+        recordAnalyticsEvent("CALL_CLICK", listingId);
       }}
     >
       <Phone className="size-4" />

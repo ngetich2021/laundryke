@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { ChatWidget } from "@/components/chat-widget";
+import { PageViewTracker } from "@/components/page-view-tracker";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
@@ -33,6 +35,8 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
 };
 
+const cfBeaconToken = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -47,7 +51,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <ChatWidget />
           <Toaster position="top-center" />
           <ServiceWorkerRegister />
+          <PageViewTracker />
         </ThemeProvider>
+        {cfBeaconToken && (
+          <Script
+            type="module"
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );

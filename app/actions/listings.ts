@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { listingSchema } from "@/lib/validations";
 import { getActiveListings } from "@/lib/listings-data";
+import { recordAnalyticsEvent } from "@/app/actions/analytics";
 import type { ListingInput } from "@/lib/validations";
 
 // A shop only shows up in public search once it has the minimum a customer
@@ -40,9 +41,11 @@ export async function createListing(input: unknown) {
 
   const isActive = isListingComplete(parsed.data);
 
-  await prisma.listing.create({
+  const listing = await prisma.listing.create({
     data: { ...parsed.data, ownerId: session.user.id, isActive },
   });
+
+  await recordAnalyticsEvent("LISTING_SUBMITTED", listing.id);
 
   revalidatePath("/");
   revalidatePath("/dashboard");
